@@ -60,7 +60,7 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
             if (this.dumpFunctions)
             {
                 JsonFileSerializer.Serialize(this.dumpFile, this.functions);
-                Log.Information($"Functions dump to: {this.dumpFile}");
+                Log.Information($"Functions dumped: {this.dumpFile}");
             }
         };
 
