@@ -1,5 +1,7 @@
-﻿using MF.Toolkit.Reloaded.Common;
+﻿using MF.Toolkit.Interfaces.Library;
+using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
+using MF.Toolkit.Reloaded.Library;
 using MF.Toolkit.Reloaded.Squirrel;
 using MF.Toolkit.Reloaded.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
@@ -18,6 +20,7 @@ public class Mod : ModBase, IExports
     private readonly IMod owner;
 
     private Config config;
+    private readonly MetaphorLibrary metaphor;
     private readonly IModConfig modConfig;
 
     private readonly SquirrelService squirrel;
@@ -46,6 +49,9 @@ public class Mod : ModBase, IExports
         this.configurables.Add(this.squirrel);
         this.modLoader.AddOrReplaceController<ISquirrel>(this.owner, this.squirrel);
 
+        this.metaphor = new MetaphorLibrary(scans!);
+        this.modLoader.AddOrReplaceController<IMetaphorLibrary>(this.owner, this.metaphor);
+
         this.ConfigurationUpdated(this.config);
         Project.Start();
     }
@@ -61,7 +67,7 @@ public class Mod : ModBase, IExports
         foreach (var item in this.configurables) item.ConfigChanged(config);
     }
 
-    public Type[] GetTypes() => [ typeof(ISquirrel) ];
+    public Type[] GetTypes() => [ typeof(ISquirrel), typeof(IMetaphorLibrary) ];
     #endregion
 
     #region For Exports, Serialization etc.

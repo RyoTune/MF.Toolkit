@@ -92,6 +92,10 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
                 {
                     Log.Information($"Function: {funcName} || 0x{funcLoc:X}");
                 }
+                else
+                {
+                    Log.Debug($"Function: {funcName} || 0x{funcLoc:X}");
+                }
 
                 // func = premade functions that take in the native function
                 //        as a single userdata.
