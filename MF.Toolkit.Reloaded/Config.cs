@@ -16,6 +16,10 @@ public class Config : Configurable<Config>
     [DisplayName("Dump Functions")]
     [DefaultValue(false)]
     public bool DumpFunctions { get; set; } = false;
+
+    [DisplayName("Unlock All Items")]
+    [DefaultValue(false)]
+    public bool UnlockAllItems { get; set; } = false;
 }
 
 /// <summary>

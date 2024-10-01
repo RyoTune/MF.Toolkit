@@ -1,6 +1,7 @@
 ﻿using MF.Toolkit.Interfaces.Library;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
+using MF.Toolkit.Reloaded.Inventory;
 using MF.Toolkit.Reloaded.Library;
 using MF.Toolkit.Reloaded.Squirrel;
 using MF.Toolkit.Reloaded.Template;
@@ -26,6 +27,7 @@ public class Mod : ModBase, IExports
     private readonly SquirrelService squirrel;
 
     private readonly List<IUseConfig> configurables = [];
+    private readonly InventoryService inventory;
 
     public Mod(ModContext context)
     {
@@ -51,6 +53,9 @@ public class Mod : ModBase, IExports
 
         this.metaphor = new MetaphorLibrary(scans!);
         this.modLoader.AddOrReplaceController<IMetaphorLibrary>(this.owner, this.metaphor);
+
+        this.inventory = new InventoryService();
+        this.configurables.Add(this.inventory);
 
         this.ConfigurationUpdated(this.config);
         Project.Start();
