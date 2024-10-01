@@ -37,7 +37,8 @@ env:
 
   IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
   RELEASE_TAG: ${{ github.ref_name }}
-  PROJECT_DIR: ./SharedScans.Reloaded
+  PROJECT_DIR: MF.Toolkit.Reloaded
+  INTERFACES_DIR: MF.Toolkit.Interfaces
 
 jobs:
   build:
