@@ -1,12 +1,15 @@
 ﻿using MF.Toolkit.Interfaces.Squirrel;
+using MF.Toolkit.Reloaded.Common;
+using MF.Toolkit.Reloaded.Configuration;
 using SharedScans.Interfaces;
+using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using static MF.Toolkit.Interfaces.Squirrel.SquirrelDefinitions;
 using static MF.Toolkit.Interfaces.Squirrel.Utils;
 
 namespace MF.Toolkit.Reloaded.Squirrel;
 
-internal unsafe class SquirrelService : ISquirrel
+internal unsafe class SquirrelService : ISquirrel, IUseConfig
 {
     private readonly WrapperContainer<sq_pushroottable> _pushroottable;
     private readonly WrapperContainer<sq_pushnull> _pushnull;
@@ -22,15 +25,20 @@ internal unsafe class SquirrelService : ISquirrel
     private readonly WrapperContainer<sq_getuserdata> _getuserdata;
 
     private readonly HookContainer<sq_newclosure> newClosure;
-
+    private readonly System.Timers.Timer timer;
     private readonly ISharedScans scans;
     private readonly HashSet<nint> knownFuncs = [];
+    private readonly ObservableCollection<Function> functions = [];
 
-    public SquirrelService(ISharedScans scans)
+    private readonly string dumpFile;
+    private bool dumpFunctions;
+
+    public SquirrelService(ISharedScans scans, string modDir)
     {
         this.scans = scans;
-        SquirrelPatterns.Scan(scans);
+        this.dumpFile = Path.Join(modDir, "functions.json");
 
+        SquirrelPatterns.Scan(scans);
         _pushroottable = scans.CreateWrapper<sq_pushroottable>(Mod.NAME);
         _pushnull = scans.CreateWrapper<sq_pushnull>(Mod.NAME);
         _next = scans.CreateWrapper<sq_next>(Mod.NAME);
@@ -45,6 +53,18 @@ internal unsafe class SquirrelService : ISquirrel
         _getuserdata = scans.CreateWrapper<sq_getuserdata>(Mod.NAME);
 
         this.newClosure = scans.CreateHook<sq_newclosure>(this.NewClosure, Mod.NAME);
+
+        this.timer = new System.Timers.Timer(TimeSpan.FromSeconds(1)) { AutoReset = false };
+        this.timer.Elapsed += (sender, args) =>
+        {
+            if (this.dumpFunctions)
+            {
+                JsonFileSerializer.Serialize(this.dumpFile, this.functions);
+                Log.Information($"Functions dump to: {this.dumpFile}");
+            }
+        };
+
+        this.functions.CollectionChanged += (sender, args) => this.timer.Restart();
     }
 
     private unsafe void NewClosure(SQVM* v, nint func, int nfreevars)
@@ -75,6 +95,7 @@ internal unsafe class SquirrelService : ISquirrel
 
                 this.scans.Broadcast(funcName, funcLoc);
                 this.knownFuncs.Add(funcLoc);
+                this.functions.Add(new(funcName, funcLoc));
             }
         }
         else if (this.knownFuncs.Contains(func) == false)
@@ -88,6 +109,12 @@ internal unsafe class SquirrelService : ISquirrel
         this.newClosure.Hook!.OriginalFunction(v, func, nfreevars);
     }
 
+    public void ConfigChanged(Config config)
+    {
+        this.dumpFunctions = config.DumpFunctions;
+        this.timer.Restart();
+    }
+
     public sq_pushroottable sq_pushroottable => _pushroottable.Wrapper;
     public sq_pushnull sq_pushnull => _pushnull.Wrapper;
     public sq_next sq_next => _next.Wrapper;
@@ -99,4 +126,17 @@ internal unsafe class SquirrelService : ISquirrel
     public sq_getclosure sq_getclosure => _getclosure.Wrapper;
     public sq_newclosure sq_newclosure => _newclosure.Wrapper;
     public sq_getuserdata sq_getuserdata => _getuserdata.Wrapper;
+
+    private class Function(string name, nint address, int numArgs = -1, int retType = -1)
+    {
+        public string Name { get; } = name;
+
+        public string Address { get; } = $"0x{address:X}";
+
+        public string Offset { get; } = $"0x{address - Utilities.BaseAddress:X}";
+
+        public int NumArgs { get; } = numArgs;
+
+        public int RetType { get; } = retType;
+    }
 }

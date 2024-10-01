@@ -8,6 +8,10 @@ public class Config : Configurable<Config>
     [DisplayName("Log Level")]
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
+
+    [DisplayName("Dump Functions")]
+    [DefaultValue(false)]
+    public bool DumpFunctions { get; set; } = false;
 }
 
 /// <summary>

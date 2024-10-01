@@ -1,9 +1,11 @@
-﻿using MF.Toolkit.Reloaded.Configuration;
+﻿using MF.Toolkit.Reloaded.Common;
+using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Squirrel;
 using MF.Toolkit.Reloaded.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
 using SharedScans.Interfaces;
+using System.Diagnostics;
 
 namespace MF.Toolkit.Reloaded;
 
@@ -20,6 +22,8 @@ public class Mod : ModBase, IExports
 
     private readonly SquirrelService squirrel;
 
+    private readonly List<IUseConfig> configurables = [];
+
     public Mod(ModContext context)
     {
         this.modLoader = context.ModLoader;
@@ -29,13 +33,20 @@ public class Mod : ModBase, IExports
         this.config = context.Configuration;
         this.modConfig = context.ModConfig;
 
+#if DEBUG
+        Debugger.Launch();
+#endif
+
         Project.Init(this.modConfig, this.modLoader, this.log, true);
 
+        var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         this.modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
 
-        this.squirrel = new(scans!);
+        this.squirrel = new(scans!, modDir);
+        this.configurables.Add(this.squirrel);
         this.modLoader.AddOrReplaceController<ISquirrel>(this.owner, this.squirrel);
 
+        this.ConfigurationUpdated(this.config);
         Project.Start();
     }
 
@@ -46,6 +57,8 @@ public class Mod : ModBase, IExports
         // ... your code here.
         config = configuration;
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
+
+        foreach (var item in this.configurables) item.ConfigChanged(config);
     }
 
     public Type[] GetTypes() => [ typeof(ISquirrel) ];
