@@ -1,0 +1,21 @@
+{
+  "ModId": "MF.Toolkit.Reloaded",
+  "ModName": "Metaphor Modding Toolkit",
+  "ModAuthor": "RyoTune",
+  "ModVersion": "1.0.0",
+  "ModDescription": "Library providing various utility functionality for use in mods.",
+  "ModDll": "MF.Toolkit.Reloaded.dll",
+  "ModIcon": "Preview.png",
+  "ModR2RManagedDll32": "x86/MF.Toolkit.Reloaded.dll",
+  "ModR2RManagedDll64": "x64/MF.Toolkit.Reloaded.dll",
+  "ModNativeDll32": "",
+  "ModNativeDll64": "",
+  "IsLibrary": false,
+  "ReleaseMetadataFileName": "MF.Toolkit.Reloaded.ReleaseMetadata.json",
+  "PluginData": {},
+  "IsUniversalMod": false,
+  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII" ],
+  "OptionalDependencies": [],
+  "SupportedAppId": [],
+  "ProjectUrl": ""
+}
