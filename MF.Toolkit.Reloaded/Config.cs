@@ -9,6 +9,10 @@ public class Config : Configurable<Config>
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
+    [DisplayName("Developer Mode")]
+    [DefaultValue(false)]
+    public bool DevMode { get; set; } = false;
+
     [DisplayName("Dump Functions")]
     [DefaultValue(false)]
     public bool DumpFunctions { get; set; } = false;

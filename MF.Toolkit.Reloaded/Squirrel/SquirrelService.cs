@@ -31,12 +31,13 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
     private readonly ObservableCollection<Function> functions = [];
 
     private readonly string dumpFile;
+    private bool devMode;
     private bool dumpFunctions;
 
     public SquirrelService(ISharedScans scans, string modDir)
     {
         this.scans = scans;
-        this.dumpFile = Path.Join(modDir, "functions.json");
+        this.dumpFile = Path.Join(modDir, "dump", "functions.json");
 
         SquirrelPatterns.Scan(scans);
         _pushroottable = scans.CreateWrapper<sq_pushroottable>(Mod.NAME);
@@ -87,7 +88,10 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
             if (this.knownFuncs.Contains(funcLoc) == false)
             {
                 var funcName = Marshal.PtrToStringAnsi(*nameBuffer)!;
-                Log.Information($"Function: {funcName} || 0x{funcLoc:X}");
+                if (this.devMode)
+                {
+                    Log.Information($"Function: {funcName} || 0x{funcLoc:X}");
+                }
 
                 // func = premade functions that take in the native function
                 //        as a single userdata.
@@ -111,6 +115,7 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
 
     public void ConfigChanged(Config config)
     {
+        this.devMode = config.DevMode;
         this.dumpFunctions = config.DumpFunctions;
         this.timer.Restart();
     }

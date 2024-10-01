@@ -15,6 +15,7 @@ public static class JsonFileSerializer
     public static void Serialize<T>(string filePath, T obj)
     {
         var data = JsonSerializer.Serialize(obj, defaults);
+        Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
         File.WriteAllText(filePath, data);
     }
 }
