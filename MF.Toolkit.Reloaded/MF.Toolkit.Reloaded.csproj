@@ -47,6 +47,11 @@
     <PackageReference Include="Reloaded.SharedLib.Hooks" Version="1.9.0" />
     <PackageReference Include="RyoTune.Reloaded" Version="1.0.1" />
     <PackageReference Include="Reloaded.Memory.SigScan.ReloadedII.Interfaces" Version="1.2.0" />
+    <PackageReference Include="SharedScans.Interfaces" Version="1.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MF.Toolkit.Interfaces\MF.Toolkit.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>
