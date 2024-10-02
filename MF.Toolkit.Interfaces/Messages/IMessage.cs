@@ -23,7 +23,7 @@ public unsafe interface IMessage
     MSG* CreateMsg(string str, MsgFlags flags, MsgConfig1 config1, MsgConfig2 config2);
 
     /// <summary>
-    /// Set item text for an item.
+    /// Set text for an item.
     /// </summary>
     /// <param name="itemId">Item ID of item to set text of.</param>
     /// <param name="type">The type of text.</param>
