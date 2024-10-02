@@ -1,8 +1,10 @@
 ﻿using MF.Toolkit.Interfaces.Library;
+using MF.Toolkit.Interfaces.Messages;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Inventory;
 using MF.Toolkit.Reloaded.Library;
+using MF.Toolkit.Reloaded.Messages;
 using MF.Toolkit.Reloaded.Squirrel;
 using MF.Toolkit.Reloaded.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
@@ -21,13 +23,13 @@ public class Mod : ModBase, IExports
     private readonly IMod owner;
 
     private Config config;
-    private readonly MetaphorLibrary metaphor;
     private readonly IModConfig modConfig;
 
-    private readonly SquirrelService squirrel;
-
     private readonly List<IUseConfig> configurables = [];
+    private readonly MetaphorLibrary metaphor;
+    private readonly SquirrelService squirrel;
     private readonly InventoryService inventory;
+    private readonly MessageService message;
 
     public Mod(ModContext context)
     {
@@ -57,6 +59,9 @@ public class Mod : ModBase, IExports
         this.inventory = new InventoryService();
         this.configurables.Add(this.inventory);
 
+        this.message = new MessageService();
+        this.modLoader.AddOrReplaceController<IMessage>(this.owner, this.message);
+
         this.ConfigurationUpdated(this.config);
         Project.Start();
     }
@@ -72,7 +77,7 @@ public class Mod : ModBase, IExports
         foreach (var item in this.configurables) item.ConfigChanged(config);
     }
 
-    public Type[] GetTypes() => [ typeof(ISquirrel), typeof(IMetaphorLibrary) ];
+    public Type[] GetTypes() => [ typeof(ISquirrel), typeof(IMetaphorLibrary), typeof(IMessage) ];
     #endregion
 
     #region For Exports, Serialization etc.
