@@ -37,9 +37,10 @@ public unsafe interface IMessage
     int CreateMsgSerial(string str);
 
     /// <summary>
-    /// Set the description for an item.
+    /// Set item text for an item.
     /// </summary>
-    /// <param name="itemId">Item ID of item to set description of.</param>
-    /// <param name="description">Item description.</param>
-    void SetItemDescription(int itemId, string description);
+    /// <param name="itemId">Item ID of item to set text of.</param>
+    /// <param name="type">The type of text.</param>
+    /// <param name="text">The text to set.</param>
+    void SetItemText(int itemId, ItemText type, string text);
 }

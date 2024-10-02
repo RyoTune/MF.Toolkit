@@ -58,3 +58,10 @@ public unsafe struct MsgConfig2
 public unsafe struct MSG
 {
 }
+
+public enum ItemText
+{
+    Name,
+    Description,
+    Effect,
+}
