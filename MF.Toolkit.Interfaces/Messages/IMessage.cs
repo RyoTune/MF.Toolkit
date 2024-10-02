@@ -35,4 +35,11 @@ public unsafe interface IMessage
     /// <param name="str">Serial string value.</param>
     /// <returns>Custom Serial ID.</returns>
     int CreateMsgSerial(string str);
+
+    /// <summary>
+    /// Set the description for an item.
+    /// </summary>
+    /// <param name="itemId">Item ID of item to set description of.</param>
+    /// <param name="description">Item description.</param>
+    void SetItemDescription(int itemId, string description);
 }

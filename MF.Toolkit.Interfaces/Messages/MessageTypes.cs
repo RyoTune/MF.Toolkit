@@ -8,16 +8,15 @@ namespace MF.Toolkit.Interfaces.Messages;
 public enum MsgFlags : uint
 {
     None = 0,
-    Flag1 = 1, // Reize to fit, they all do that?
-    Flag2 = 1 << 1,
-    Flag3 = 1 << 2,
+    Flag1 = 1, // Bold / Resize?
+    Flag2 = 1 << 1, // Normal (at least in inv) / Resize
+    Flag3 = 1 << 2, // Normal + big, same as None?
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x20)]
 public unsafe struct ItemMsgSerial
 {
     private fixed byte magic[4];
-
     public int NameSerialId;
     public int DescSerialId;
     public int EffectSerialId;
