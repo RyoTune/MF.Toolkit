@@ -23,20 +23,6 @@ public unsafe interface IMessage
     MSG* CreateMsg(string str, MsgFlags flags, MsgConfig1 config1, MsgConfig2 config2);
 
     /// <summary>
-    /// Create a custom MSG serial.
-    /// </summary>
-    /// <param name="msg">Serial MSG value.</param>
-    /// <returns>Custom Serial ID.</returns>
-    int CreateMsgSerial(MSG* msg);
-
-    /// <summary>
-    /// Create a custom MSG serial.
-    /// </summary>
-    /// <param name="str">Serial string value.</param>
-    /// <returns>Custom Serial ID.</returns>
-    int CreateMsgSerial(string str);
-
-    /// <summary>
     /// Set item text for an item.
     /// </summary>
     /// <param name="itemId">Item ID of item to set text of.</param>

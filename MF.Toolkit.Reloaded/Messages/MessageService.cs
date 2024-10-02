@@ -6,19 +6,19 @@ namespace MF.Toolkit.Reloaded.Messages;
 
 internal unsafe class MessageService : IMessage
 {
-    private delegate int GetItemNameSerialId(ItemMsgSerial* serial);
-    private IHook<GetItemNameSerialId>? getItemNameSerialIdHook;
-
-    private delegate nint GetMsgBySerialId(int* param1, uint* param2, nint param3);
-    private IHook<GetMsgBySerialId>? getMsgBySerialHook;
+    private delegate MSG* GetItemMsg(int* itemId, MsgFlags* msgFlags);
+    private IHook<GetItemMsg>? getItemNameHook;
+    private IHook<GetItemMsg>? getItemDescHook;
+    private IHook<GetItemMsg>? getItemEffectHook;
 
     private delegate MSG* CreateMsgFromString(nint str, MsgFlags flags, MsgConfig1* config1, MsgConfig2* config2);
     private CreateMsgFromString? createMsgFromString;
 
     private readonly MsgConfig1* msgConfig1;
     private readonly MsgConfig2* msgConfig2;
-    private readonly Dictionary<int, nint> customSerialMsgs = [];
-    private int nextCustomMsg = -1;
+    private readonly Dictionary<int, string> itemNames = [];
+    private readonly Dictionary<int, string> itemDescs = [];
+    private readonly Dictionary<int, string> itemEffects = [];
 
     public MessageService()
     {
@@ -28,62 +28,102 @@ internal unsafe class MessageService : IMessage
         *this.msgConfig2 = new();
 
         ScanHooks.Add(
-            nameof(GetItemNameSerialId),
-            "48 83 EC 38 4C 8B 05 ?? ?? ?? ?? 4D 85 C0 0F 84 ?? ?? ?? ?? 0F B6 01 48 8D 54 24 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 88 44 24 ?? 0F B6 41 ?? 49 8B C8 88 44 24",
-            (hooks, result) => this.getItemNameSerialIdHook = hooks.CreateHook<GetItemNameSerialId>(this.GetItemNameSerialIdImpl, result).Activate());
-
-        ScanHooks.Add(
-            nameof(GetMsgBySerialId),
-            "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 81 EC 80 00 00 00 49 8B F0",
-            (hooks, result) => this.getMsgBySerialHook = hooks.CreateHook<GetMsgBySerialId>(this.GetMsgBySerialIdImpl, result).Activate());
-
-        ScanHooks.Add(
             nameof(CreateMsgFromString),
             "40 53 48 83 EC 30 41 80 79 ?? 00",
             (hooks, result) => this.createMsgFromString = hooks.CreateWrapper<CreateMsgFromString>(result, out _));
+
+        ScanHooks.Add(
+            "GetItemNameMsg from FUN_140a545e0",
+            "48 83 EC 28 8B 01 FF C8",
+            (hooks, result) =>
+            {
+                var offset = (int*)(result + 0x2d + 1);
+                var offsetValue = *offset;
+                var funcAddress = offsetValue + (nint)offset + 4;
+                this.getItemNameHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Name), funcAddress).Activate();
+            });
+
+        ScanHooks.Add(
+            "GetItemEffectMsg from FUN_140b3cc30",
+            "44 89 44 24 ?? 55 53 56 57 41 54 41 55 41 56 41 57 48 8B EC 48 83 EC 38 4C 8B F9",
+            (hooks, result) =>
+            {
+                var offset = (int*)(result + 0x8e + 1);
+                var offsetValue = *offset;
+                var funcAddress = offsetValue + (nint)offset + 4;
+                this.getItemEffectHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Effect), funcAddress).Activate();
+            });
+
+        ScanHooks.Add(
+            "GetItemDescriptionMsg",
+            "48 89 5C 24 ?? 57 48 83 EC 20 48 8B D9 48 8B FA 8B 09 E8 ?? ?? ?? ?? 83 F8 4D",
+            (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Description), result).Activate());
     }
 
-    private int GetItemNameSerialIdImpl(ItemMsgSerial* serial)
+    public void SetItemText(int itemId, ItemText type, string text)
     {
-        if (serial->IsCustomSerial())
+        switch (type)
         {
-            Log.Debug($"Using Name Serial ID: {serial->NameSerialId}");
-            return this.nextCustomMsg = serial->NameSerialId;
-        }
-        else
-        {
-            var result = this.getItemNameSerialIdHook!.OriginalFunction(serial);
-            return result;
+            case ItemText.Name:
+                this.itemNames[itemId] = text;
+                break;
+            case ItemText.Description:
+                this.itemDescs[itemId] = text;
+                break;
+            case ItemText.Effect:
+                this.itemEffects[itemId] = text;
+                break;
         }
     }
 
-    private nint GetMsgBySerialIdImpl(int* serialId, uint* param2, nint param3)
+    private MSG* GetItemMsgImpl(int* itemId, MsgFlags* msgFlags, ItemText type)
     {
-        if (*serialId == -1)
+        if (type == ItemText.Description)
         {
-            this.customSerialMsgs.TryGetValue(this.nextCustomMsg, out var newMsg);
-            this.nextCustomMsg = -1;
-            return newMsg;
+            if (this.itemDescs.TryGetValue(*itemId, out var desc))
+            {
+                var strPtr = Marshal.StringToHGlobalAnsi(desc);
+                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
+                Marshal.FreeHGlobal(strPtr);
+                return msg;
+            }
+
+            return this.getItemDescHook!.OriginalFunction(itemId, msgFlags);
         }
-        else
+
+        if (type == ItemText.Name)
         {
-            return this.getMsgBySerialHook!.OriginalFunction(serialId, param2, param3);
+            if (this.itemNames.TryGetValue(*itemId, out var name))
+            {
+                var strPtr = Marshal.StringToHGlobalAnsi(name);
+                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
+                Marshal.FreeHGlobal(strPtr);
+                return msg;
+            }
+
+            return this.getItemNameHook!.OriginalFunction(itemId, msgFlags);
         }
-    }
 
-    public int CreateMsgSerial(MSG* msg)
-    {
-        var nextId = this.customSerialMsgs.Count;
-        this.customSerialMsgs[nextId] = (nint)msg;
-        return nextId;
-    }
+        if (type == ItemText.Effect)
+        {
+            if (this.itemEffects.TryGetValue(*itemId, out var effect))
+            {
+                var strPtr = Marshal.StringToHGlobalAnsi(effect);
+                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
+                Marshal.FreeHGlobal(strPtr);
+                return msg;
+            }
 
-    public int CreateMsgSerial(string str) => this.CreateMsgSerial(this.CreateMsg(str));
+            return this.getItemEffectHook!.OriginalFunction(itemId, msgFlags);
+        }
+
+        return this.CreateMsg("Unknown Item MSG");
+    }
 
     public MSG* CreateMsg(string str)
     {
         var strPtr = Marshal.StringToHGlobalAnsi(str);
-        var msg = this.createMsgFromString!(strPtr, MsgFlags.Flag1, this.msgConfig1, this.msgConfig2);
+        var msg = this.createMsgFromString!(strPtr, MsgFlags.Flag2, this.msgConfig1, this.msgConfig2);
         Marshal.FreeHGlobal(strPtr);
         return msg;
     }

@@ -45,6 +45,7 @@ public class Mod : ModBase, IExports
 #endif
 
         Project.Init(this.modConfig, this.modLoader, this.log, true);
+        Log.LogLevel = this.config.LogLevel;
 
         var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
         this.modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
@@ -74,6 +75,7 @@ public class Mod : ModBase, IExports
         config = configuration;
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
 
+        Log.LogLevel = configuration.LogLevel;
         foreach (var item in this.configurables) item.ConfigChanged(config);
     }
 
