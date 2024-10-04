@@ -64,9 +64,11 @@ public class Mod : ModBase, IExports
         this.inventory = new InventoryService();
         this.configurables.Add(this.inventory);
 
-        this.messageRegistry = new();
-        this.message = new MessageService(this.messageRegistry);
+        this.messageRegistry = new MessageRegistry();
         this.modders.Add(this.messageRegistry);
+        this.configurables.Add(this.messageRegistry);
+
+        this.message = new MessageService(this.messageRegistry);
         this.configurables.Add(this.message);
         this.modLoader.AddOrReplaceController<IMessage>(this.owner, this.message);
 
