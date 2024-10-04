@@ -1,4 +1,6 @@
-﻿namespace MF.Toolkit.Interfaces.Messages.Models;
+﻿using System.Text;
+
+namespace MF.Toolkit.Interfaces.Messages.Models;
 
 /// <summary>
 /// Parsed MSG.
@@ -19,4 +21,20 @@ public class Message
     /// MSG content.
     /// </summary>
     public string Content { get; set; } = string.Empty;
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var sb = new StringBuilder();
+
+        if (this.Speaker != null)
+        {
+            sb.AppendLine($"#{this.Speaker}");
+        }
+
+        sb.AppendLine($"@{this.Identifier}");
+        sb.AppendLine($"{{\n{this.Content}\n}}");
+
+        return sb.ToString();
+    }
 }

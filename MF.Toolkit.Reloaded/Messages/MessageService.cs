@@ -88,7 +88,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
         {
             var msgDict = MessageParser.Parse(Marshal.PtrToStringAnsi(msgSrc, msgSrcLength)!);
             msgDict.Merge(newMsgs);
-            (var pointer, var length) = msgDict.ToBinary();
+            var newMsgSrc = msgDict.ToMemory();
 
             if (this.devMode)
             {
@@ -99,8 +99,8 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 Log.Debug($"Merged MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
             }
 
-            var result = this.compileMsgFileHook!.OriginalFunction(pointer, length, msgFile, param4, param5);
-            Marshal.FreeHGlobal(pointer); // Hopefully doesn't cause a crash lol.
+            var result = this.compileMsgFileHook!.OriginalFunction(newMsgSrc.Pointer, newMsgSrc.Length, msgFile, param4, param5);
+            Marshal.FreeHGlobal(newMsgSrc.Pointer); // Hopefully doesn't cause a crash lol.
             return result;
         }
 

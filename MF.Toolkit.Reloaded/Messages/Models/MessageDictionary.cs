@@ -23,22 +23,9 @@ public class MessageDictionary : Dictionary<string, Message>
         }
     }
 
-    public (nint pointer, int length) ToBinary()
+    public (nint Pointer, int Length) ToMemory()
     {
-        var sb = new StringBuilder();
-        foreach (var item in this)
-        {
-            var msg = item.Value;
-            if (msg.Speaker != null)
-            {
-                sb.AppendLine($"#{msg.Speaker}");
-            }
-
-            sb.AppendLine($"@{msg.Identifier}");
-            sb.AppendLine($"{{\n{msg.Content}\n}}");
-        }
-
-        var str = sb.ToString();
+        var str = string.Join('\n', this.Values.Select(x => x.ToString()));
         return (Marshal.StringToHGlobalAnsi(str), str.Length);
     }
 }
