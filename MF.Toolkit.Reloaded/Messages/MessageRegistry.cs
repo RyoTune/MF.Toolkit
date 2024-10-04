@@ -40,9 +40,13 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
 
     public void RegisterFolder(string folder)
     {
+        var filesRegistered = new HashSet<string>();
         foreach (var file in Directory.EnumerateFiles(folder, "*.msg", SearchOption.AllDirectories))
         {
-            this.RegisterWithLanguages(folder, file);
+            if (!filesRegistered.Contains(file))
+            {
+                this.RegisterWithLanguages(folder, file, filesRegistered);
+            }
         }
     }
 
@@ -61,12 +65,16 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
         }
     }
 
-    private void RegisterWithLanguages(string baseFolder, string inputFile)
+    private void RegisterWithLanguages(string baseDir, string inputFile, HashSet<string> filesRegistered)
     {
-        var inputMsgPath = Path.GetRelativePath(baseFolder, inputFile);
+        var inputMsgPath = Path.GetRelativePath(baseDir, inputFile);
         var inputLang = Enum.GetValues<Language>().FirstOrDefault(x => inputMsgPath.StartsWith(x.ToCode(), StringComparison.OrdinalIgnoreCase));
         if (inputLang == Language.None)
         {
+            var msgProvider = new FileMessages(inputFile);
+            this.RegisterProvider(inputMsgPath, msgProvider);
+            filesRegistered.Add(inputFile);
+            Log.Information($"Registered MSG: {inputMsgPath}\nFile: {inputFile}");
             return;
         }
 
@@ -76,15 +84,20 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
         // Find all available language files first.
         foreach (var lang in Enum.GetValues<Language>())
         {
-            var langFile = Path.Join(baseFolder, lang.ToCode(), baseMsgPath);
+            if (lang == Language.None) continue;
+
+            var langFile = Path.Join(baseDir, lang.ToCode(), baseMsgPath);
             if (File.Exists(langFile))
             {
                 langFiles[lang] = langFile;
+                filesRegistered.Add(langFile);
             }
         }
 
         foreach (var lang in Enum.GetValues<Language>())
         {
+            if (lang == Language.None) continue;
+
             var langMsgPath = Path.Join(lang.ToCode(), baseMsgPath);
 
             // Mod has file for lang.
