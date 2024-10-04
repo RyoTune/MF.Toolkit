@@ -1,13 +1,13 @@
-﻿using MF.Toolkit.Reloaded.Common;
+﻿using MF.Toolkit.Interfaces.Messages.Models;
+using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Messages.Models;
-using MF.Toolkit.Reloaded.Messages.Parser;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MF.Toolkit.Reloaded.Messages;
 
 internal class MessageRegistry : IRegisterMod
 {
-    private readonly Dictionary<string, List<string>> modMsgFiles = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<IMessagesProvider>> msgProviders = new(StringComparer.OrdinalIgnoreCase);
 
     public void RegisterMod(string modId, string modDir)
     {
@@ -20,13 +20,12 @@ internal class MessageRegistry : IRegisterMod
 
     public bool TryGetModDict(string msgPath, [NotNullWhen(true)] out MessageDictionary? modDict)
     {
-        if (this.modMsgFiles.TryGetValue(msgPath, out var modFiles))
+        if (this.msgProviders.TryGetValue(msgPath, out var providers))
         {
             modDict = [];
-            foreach (var file in modFiles)
+            foreach (var provider in providers)
             {
-                var fileMsgs = MessageParser.Parse(File.ReadAllText(file));
-                modDict.Merge(fileMsgs);
+                modDict.Merge(provider.Messages);
             }
 
             return true;
@@ -40,17 +39,25 @@ internal class MessageRegistry : IRegisterMod
     {
         foreach (var file in Directory.EnumerateFiles(folder, "*.msg", SearchOption.AllDirectories))
         {
-            var msgTargetPath = Path.GetRelativePath(folder, file).Replace("\\", "/");
-            if (this.modMsgFiles.TryGetValue(msgTargetPath, out var existing))
-            {
-                existing.Add(file);
-            }
-            else
-            {
-                this.modMsgFiles[msgTargetPath] = [file];
-            }
+            var msgFilePath = Path.GetRelativePath(folder, file).Replace("\\", "/");
+            var msgProvider = new FileMessages(file);
+            this.RegisterProvider(msgFilePath, msgProvider);
 
-            Log.Information($"Registered MSG: {msgTargetPath}\nFile: {file}");
+            Log.Information($"Registered MSG: {msgFilePath}\nFile: {file}");
+        }
+    }
+
+    public void RegisterMessages(string msgFilePath, IEnumerable<Message> messages) => this.RegisterProvider(msgFilePath, new ListMessages(messages));
+
+    private void RegisterProvider(string msgFilePath, IMessagesProvider provider)
+    {
+        if (this.msgProviders.TryGetValue(msgFilePath, out var existing))
+        {
+            existing.Add(provider);
+        }
+        else
+        {
+            this.msgProviders[msgFilePath] = [provider];
         }
     }
 }

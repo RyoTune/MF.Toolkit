@@ -1,4 +1,5 @@
-﻿using MF.Toolkit.Reloaded.Messages.Models;
+﻿using MF.Toolkit.Interfaces.Messages.Models;
+using MF.Toolkit.Reloaded.Messages.Models;
 using Superpower;
 using Superpower.Parsers;
 using Superpower.Tokenizers;

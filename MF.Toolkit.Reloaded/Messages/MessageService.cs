@@ -1,4 +1,5 @@
 ﻿using MF.Toolkit.Interfaces.Messages;
+using MF.Toolkit.Interfaces.Messages.Models;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Messages.Parser;
@@ -99,8 +100,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
             }
 
             var result = this.compileMsgFileHook!.OriginalFunction(pointer, length, msgFile, param4, param5);
-            Marshal.FreeHGlobal(pointer);
-
+            Marshal.FreeHGlobal(pointer); // Hopefully doesn't cause a crash lol.
             return result;
         }
 
@@ -195,4 +195,6 @@ internal unsafe class MessageService : IMessage, IUseConfig
     }
 
     public void ConfigChanged(Config config) => this.devMode = config.DevMode;
+
+    public void EditMsgFile(string msgFilePath, IEnumerable<Message> msgs) => this.registry.RegisterMessages(msgFilePath, msgs);
 }

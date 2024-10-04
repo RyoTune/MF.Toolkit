@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using MF.Toolkit.Interfaces.Messages.Models;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace MF.Toolkit.Reloaded.Messages.Models;

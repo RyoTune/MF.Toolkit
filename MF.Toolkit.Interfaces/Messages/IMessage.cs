@@ -1,10 +1,19 @@
-﻿namespace MF.Toolkit.Interfaces.Messages;
+﻿using MF.Toolkit.Interfaces.Messages.Models;
+
+namespace MF.Toolkit.Interfaces.Messages;
 
 /// <summary>
 /// MSG related functions and utils.
 /// </summary>
 public unsafe interface IMessage
 {
+    /// <summary>
+    /// Add to or edit an existing MSG file.
+    /// </summary>
+    /// <param name="msgFilePath">MSG file to edit.</param>
+    /// <param name="msgs">New MSGs.</param>
+    void EditMsgFile(string msgFilePath, IEnumerable<Message> msgs);
+
     /// <summary>
     /// Create a MSG from a string (plaintext).
     /// </summary>
