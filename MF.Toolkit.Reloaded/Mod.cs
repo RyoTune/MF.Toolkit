@@ -9,6 +9,7 @@ using MF.Toolkit.Reloaded.Squirrel;
 using MF.Toolkit.Reloaded.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
+using Reloaded.Mod.Interfaces.Internal;
 using SharedScans.Interfaces;
 using System.Diagnostics;
 
@@ -26,10 +27,13 @@ public class Mod : ModBase, IExports
     private readonly IModConfig modConfig;
 
     private readonly List<IUseConfig> configurables = [];
+    private readonly List<IRegisterMod> modders = [];
+
     private readonly MetaphorLibrary metaphor;
     private readonly SquirrelService squirrel;
     private readonly InventoryService inventory;
     private readonly MessageService message;
+    private readonly MessageRegistry messageRegistry;
 
     public Mod(ModContext context)
     {
@@ -60,11 +64,27 @@ public class Mod : ModBase, IExports
         this.inventory = new InventoryService();
         this.configurables.Add(this.inventory);
 
-        this.message = new MessageService();
+        this.messageRegistry = new();
+        this.message = new MessageService(this.messageRegistry);
+        this.modders.Add(this.messageRegistry);
+        this.configurables.Add(this.message);
         this.modLoader.AddOrReplaceController<IMessage>(this.owner, this.message);
 
+        this.modLoader.ModLoaded += this.OnModLoaded;
         this.ConfigurationUpdated(this.config);
         Project.Start();
+    }
+
+    private void OnModLoaded(IModV1 mod, IModConfigV1 config)
+    {
+        if (config.ModDependencies.Contains(this.modConfig.ModId))
+        {
+            foreach (var modder in this.modders)
+            {
+                var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
+                modder.RegisterMod(config.ModId, modDir);
+            }
+        }
     }
 
     #region Standard Overrides

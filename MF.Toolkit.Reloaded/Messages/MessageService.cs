@@ -1,10 +1,13 @@
 ﻿using MF.Toolkit.Interfaces.Messages;
+using MF.Toolkit.Reloaded.Common;
+using MF.Toolkit.Reloaded.Configuration;
+using MF.Toolkit.Reloaded.Messages.Parser;
 using Reloaded.Hooks.Definitions;
 using System.Runtime.InteropServices;
 
 namespace MF.Toolkit.Reloaded.Messages;
 
-internal unsafe class MessageService : IMessage
+internal unsafe class MessageService : IMessage, IUseConfig
 {
     private delegate MSG* GetItemMsg(int* itemId, MsgFlags* msgFlags);
     private IHook<GetItemMsg>? getItemNameHook;
@@ -14,14 +17,21 @@ internal unsafe class MessageService : IMessage
     private delegate MSG* CreateMsgFromString(nint str, MsgFlags flags, MsgConfig1* config1, MsgConfig2* config2);
     private CreateMsgFromString? createMsgFromString;
 
+    private delegate nint CompileMsg(nint buffer, nint sourceStr, int numItems);
+    private delegate uint CompileMsgFile(nint msgSrc, int msgSrcLength, nint msgFile, int param4, byte param5);
+    private IHook<CompileMsgFile>? compileMsgFileHook;
+
     private readonly MsgConfig1* msgConfig1;
     private readonly MsgConfig2* msgConfig2;
     private readonly Dictionary<int, string> itemNames = [];
     private readonly Dictionary<int, string> itemDescs = [];
     private readonly Dictionary<int, string> itemEffects = [];
+    private readonly MessageRegistry registry;
+    private bool devMode;
 
-    public MessageService()
+    public MessageService(MessageRegistry registry)
     {
+        this.registry = registry;
         this.msgConfig1 = (MsgConfig1*)Marshal.AllocHGlobal(sizeof(MsgConfig1));
         this.msgConfig2 = (MsgConfig2*)Marshal.AllocHGlobal(sizeof(MsgConfig1));
         *this.msgConfig1 = new();
@@ -58,6 +68,48 @@ internal unsafe class MessageService : IMessage
             "GetItemDescriptionMsg",
             "48 89 5C 24 ?? 57 48 83 EC 20 48 8B D9 48 8B FA 8B 09 E8 ?? ?? ?? ?? 83 F8 4D",
             (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Description), result).Activate());
+
+        ScanHooks.Add(
+            nameof(CompileMsg),
+            "48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 48 89 78 ?? 41 56 48 83 EC 60 41 8B F8",
+            (hooks, result) => { });
+
+        ScanHooks.Add(
+            nameof(CompileMsgFile),
+            "48 89 5C 24 ?? 48 89 4C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC E0 00 00 00 45 8B E1",
+            (hooks, result) => this.compileMsgFileHook = hooks.CreateHook<CompileMsgFile>(this.CompileMsgFileImpl, result).Activate());
+    }
+
+    private uint CompileMsgFileImpl(nint msgSrc, int msgSrcLength, nint msgFile, int param4, byte param5)
+    {
+        var msgPath = Marshal.PtrToStringAnsi(msgFile)!;
+        if (this.registry.TryGetModDict(msgPath, out var newMsgs) && newMsgs.Count > 0)
+        {
+            var msgDict = MessageParser.Parse(Marshal.PtrToStringAnsi(msgSrc, msgSrcLength)!);
+            msgDict.Merge(newMsgs);
+            (var pointer, var length) = msgDict.ToBinary();
+
+            if (this.devMode)
+            {
+                Log.Information($"Merged MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+            }
+            else
+            {
+                Log.Debug($"Merged MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+            }
+
+            var result = this.compileMsgFileHook!.OriginalFunction(pointer, length, msgFile, param4, param5);
+            Marshal.FreeHGlobal(pointer);
+
+            return result;
+        }
+
+        if (this.devMode)
+        {
+            Log.Information($"MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+        }
+
+        return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, param4, param5);
     }
 
     public void SetItemText(int itemId, ItemText type, string text)
@@ -75,7 +127,6 @@ internal unsafe class MessageService : IMessage
                 break;
         }
     }
-
     private MSG* GetItemMsgImpl(int* itemId, MsgFlags* msgFlags, ItemText type)
     {
         if (type == ItemText.Description)
@@ -142,4 +193,6 @@ internal unsafe class MessageService : IMessage
         Marshal.FreeHGlobal((nint)c2);
         return msg;
     }
+
+    public void ConfigChanged(Config config) => this.devMode = config.DevMode;
 }

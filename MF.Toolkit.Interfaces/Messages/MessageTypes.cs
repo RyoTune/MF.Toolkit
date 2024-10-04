@@ -7,10 +7,13 @@ namespace MF.Toolkit.Interfaces.Messages;
 [Flags]
 public enum MsgFlags : uint
 {
+    // Descriptions use Flags 1, 2, 3.
+    // Names use Flag 4.
     None = 0,
     Flag1 = 1, // Bold / Resize?
     Flag2 = 1 << 1, // Normal (at least in inv) / Resize
     Flag3 = 1 << 2, // Normal + big, same as None?
+    Flag4 = 1 << 3, // Used by names.
 }
 
 [StructLayout(LayoutKind.Sequential, Size = 0x20)]
