@@ -32,10 +32,18 @@ public unsafe interface IMessage
     MSG* CreateMsg(string str, MsgFlag flags, MsgConfig1 config1, MsgConfig2 config2);
 
     /// <summary>
+    /// Creates an item message and returns the label assigned to it.
+    /// </summary>
+    /// <param name="type">Type of item message.</param>
+    /// <param name="message">Message content.</param>
+    /// <returns>MSG label assigned ot it.</returns>
+    string CreateItemMessage(ItemMessage type, string message);
+
+    /// <summary>
     /// Set the message content for an item's text.
     /// </summary>
     /// <param name="itemId">Item ID of item to set.</param>
     /// <param name="type">The type of text.</param>
     /// <param name="message">The message content.</param>
-    void SetItemMessage(int itemId, ItemText type, string message);
+    //void SetItemMessage(int itemId, ItemText type, string message);
 }
