@@ -40,10 +40,10 @@ public unsafe interface IMessage
     string CreateItemMessage(ItemMessage type, string message);
 
     /// <summary>
-    /// Set the message content for an item's text.
+    /// Set the message label to use for an item's message.
     /// </summary>
     /// <param name="itemId">Item ID of item to set.</param>
-    /// <param name="type">The type of text.</param>
-    /// <param name="message">The message content.</param>
-    //void SetItemMessage(int itemId, ItemText type, string message);
+    /// <param name="type">Type of message.</param>
+    /// <param name="label">Message label to use.</param>
+    void SetItemMessage(int itemId, ItemMessage type, string label);
 }
