@@ -5,7 +5,7 @@ namespace MF.Toolkit.Interfaces.Messages;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 [Flags]
-public enum MsgFlags : uint
+public enum MsgFlag : uint
 {
     // Descriptions use Flags 1, 2, 3.
     // Names use Flag 4.

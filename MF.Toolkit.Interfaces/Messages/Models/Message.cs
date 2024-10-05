@@ -10,7 +10,7 @@ public class Message
     /// <summary>
     /// Identifier.
     /// </summary>
-    public string Identifier { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
 
     /// <summary>
     /// Speaker ID.
@@ -32,7 +32,7 @@ public class Message
             sb.AppendLine($"#{this.Speaker}");
         }
 
-        sb.AppendLine($"@{this.Identifier}");
+        sb.AppendLine($"@{this.Label}");
         sb.AppendLine($"{{\n{this.Content}\n}}");
 
         return sb.ToString();

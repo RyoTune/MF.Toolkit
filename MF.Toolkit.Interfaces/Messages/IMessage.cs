@@ -29,13 +29,13 @@ public unsafe interface IMessage
     /// <param name="config1">MSG config 1.</param>
     /// <param name="config2">MSG config 2.</param>
     /// <returns>MSG object pointer.</returns>
-    MSG* CreateMsg(string str, MsgFlags flags, MsgConfig1 config1, MsgConfig2 config2);
+    MSG* CreateMsg(string str, MsgFlag flags, MsgConfig1 config1, MsgConfig2 config2);
 
     /// <summary>
-    /// Set text for an item.
+    /// Set the message content for an item's text.
     /// </summary>
-    /// <param name="itemId">Item ID of item to set text of.</param>
+    /// <param name="itemId">Item ID of item to set.</param>
     /// <param name="type">The type of text.</param>
-    /// <param name="text">The text to set.</param>
-    void SetItemText(int itemId, ItemText type, string text);
+    /// <param name="message">The message content.</param>
+    void SetItemMessage(int itemId, ItemText type, string message);
 }
