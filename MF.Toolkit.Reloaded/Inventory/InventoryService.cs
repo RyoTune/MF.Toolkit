@@ -41,11 +41,12 @@ internal class InventoryService : IUseConfig
             $"{nameof(GetItemCount)}: Information / Key Items",
             "40 53 48 83 EC 20 0F B7 D9 E8 ?? ?? ?? ?? 0F B6 84 ?? ?? 10 00 00 48 83 C4 20 5B C3",
             (hooks, result) => this.hooks[ItemType.InfoKey] = hooks.CreateHook<GetItemCount>((id) => GetItemCountImpl(ItemType.InfoKey, id), result).Activate());
-
+#if DEBUG
         ScanHooks.Add(
             $"{nameof(GetItemCount)}: Outfits",
             "40 53 48 83 EC 20 0F B7 D9 E8 ?? ?? ?? ?? 0F B6 84 ?? ?? 14 00 00 48 83 C4 20 5B C3",
             (hooks, result) => this.hooks[ItemType.Outfits] = hooks.CreateHook<GetItemCount>((id) => GetItemCountImpl(ItemType.Outfits, id), result).Activate());
+#endif
     }
 
     private byte GetItemCountImpl(ItemType type, ushort itemId)

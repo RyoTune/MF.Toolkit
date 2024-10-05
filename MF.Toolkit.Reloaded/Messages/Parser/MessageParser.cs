@@ -23,10 +23,10 @@ public partial class MessageParser
         .Between(Token.EqualTo(MessageToken.CurlyOpen), Token.EqualTo(MessageToken.CurlyClose))
         select string.Join('\n', content.Select(x => x.ToStringValue()));
 
-    private static readonly TokenListParser<MessageToken, string> Identifier =
+    private static readonly TokenListParser<MessageToken, string> Label =
         from _ in Token.EqualTo(MessageToken.AtSymbol)
-        from identifier in Token.EqualTo(MessageToken.Text)
-        select identifier.ToStringValue();
+        from label in Token.EqualTo(MessageToken.Text)
+        select label.ToStringValue();
 
     private static readonly TokenListParser<MessageToken, string?> Speaker =
         from _ in Token.EqualTo(MessageToken.Hash)
@@ -35,13 +35,13 @@ public partial class MessageParser
 
     private static readonly TokenListParser<MessageToken, Message> ItemParser =
         from speaker in Speaker.OptionalOrDefault()
-        from identifier in Identifier
+        from label in Label
         from content in Content
-        select new Message() { Content = content, Identifier = identifier, Speaker = speaker };
+        select new Message() { Content = content, Label = label, Speaker = speaker };
 
     private static readonly TokenListParser<MessageToken, Message[]> Parser = ItemParser.Many();
 
-    public static MessageDictionary Parse(string input)
+    public static MessageList Parse(string input)
     {
         var tokens = _tokenizer.Tokenize(input.ReplaceLineEndings("\n"));
         var msgs = Parser.Parse(tokens);

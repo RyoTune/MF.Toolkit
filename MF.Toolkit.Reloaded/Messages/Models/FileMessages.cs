@@ -5,12 +5,12 @@ namespace MF.Toolkit.Reloaded.Messages.Models;
 internal class FileMessages(string file) : IMessagesProvider
 {
     private readonly string file = file;
-    private MessageDictionary? _messages;
+    private MessageList? _messages;
     private DateTime lastWrite = DateTime.Now;
 
-    public MessageDictionary Messages => this.GetMessages();
+    public MessageList Messages => this.GetMessages();
 
-    public MessageDictionary GetMessages()
+    public MessageList GetMessages()
     {
         if (_messages == null)
         {

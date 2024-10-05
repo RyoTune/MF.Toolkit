@@ -1,26 +1,42 @@
-﻿using MF.Toolkit.Interfaces.Messages;
+﻿using MF.Toolkit.Interfaces.Common;
+using MF.Toolkit.Interfaces.Messages;
 using MF.Toolkit.Interfaces.Messages.Models;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
-using MF.Toolkit.Reloaded.Messages.Parser;
+using MF.Toolkit.Reloaded.Messages.Models;
 using Reloaded.Hooks.Definitions;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace MF.Toolkit.Reloaded.Messages;
 
 internal unsafe class MessageService : IMessage, IUseConfig
 {
-    private delegate MSG* GetItemMsg(int* itemId, MsgFlags* msgFlags);
+    private static readonly Message SYSTEM_ERROR = new()
+    {
+        Label = nameof(SYSTEM_ERROR),
+        Content = "ERROR",
+    };
+
+    private delegate MSG* GetItemMsg(int* itemId, MsgFlag* msgFlags);
     private IHook<GetItemMsg>? getItemNameHook;
     private IHook<GetItemMsg>? getItemDescHook;
     private IHook<GetItemMsg>? getItemEffectHook;
 
-    private delegate MSG* CreateMsgFromString(nint str, MsgFlags flags, MsgConfig1* config1, MsgConfig2* config2);
+    private delegate MSG* CreateMsgFromString(nint str, MsgFlag flags, MsgConfig1* config1, MsgConfig2* config2);
     private CreateMsgFromString? createMsgFromString;
 
-    private delegate nint CompileMsg(nint buffer, nint sourceStr, int numItems);
+    private delegate MSG* GetMessageByLabelIndex(int* msgId, int labelIdx, MsgFlag* flags, MsgConfigs* configs);
+
+    private delegate nint GetMsgBySerialId(int* param1, int* param2, nint param3);
+
+    private delegate nint CompileMsg(nint buffer, nint sourceStr, int length);
     private delegate uint CompileMsgFile(nint msgSrc, int msgSrcLength, nint msgFile, int param4, byte param5);
     private IHook<CompileMsgFile>? compileMsgFileHook;
+    private GetMessageByLabelIndex? getMsgByLabel;
+
+    private record MsgTableEntry(int Id, GameMsg Msg);
+    private readonly ConcurrentDictionary<string, MsgTableEntry> msgTable = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly MsgConfig1* msgConfig1;
     private readonly MsgConfig2* msgConfig2;
@@ -51,7 +67,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 var offset = (int*)(result + 0x2d + 1);
                 var offsetValue = *offset;
                 var funcAddress = offsetValue + (nint)offset + 4;
-                this.getItemNameHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Name), funcAddress).Activate();
+                this.getItemNameHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Name), funcAddress).Activate();
             });
 
         ScanHooks.Add(
@@ -62,107 +78,183 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 var offset = (int*)(result + 0x8e + 1);
                 var offsetValue = *offset;
                 var funcAddress = offsetValue + (nint)offset + 4;
-                this.getItemEffectHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Effect), funcAddress).Activate();
+                this.getItemEffectHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Effect), funcAddress).Activate();
             });
 
         ScanHooks.Add(
             "GetItemDescriptionMsg",
             "48 89 5C 24 ?? 57 48 83 EC 20 48 8B D9 48 8B FA 8B 09 E8 ?? ?? ?? ?? 83 F8 4D",
-            (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemText.Description), result).Activate());
-
-        ScanHooks.Add(
-            nameof(CompileMsg),
-            "48 8B C4 48 89 58 ?? 48 89 68 ?? 48 89 70 ?? 48 89 78 ?? 41 56 48 83 EC 60 41 8B F8",
-            (hooks, result) => { });
+            (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Description), result).Activate());
 
         ScanHooks.Add(
             nameof(CompileMsgFile),
             "48 89 5C 24 ?? 48 89 4C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ?? 48 81 EC E0 00 00 00 45 8B E1",
             (hooks, result) => this.compileMsgFileHook = hooks.CreateHook<CompileMsgFile>(this.CompileMsgFileImpl, result).Activate());
+
+        ScanHooks.Add(
+            nameof(GetMessageByLabelIndex),
+            "48 89 5C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 55 41 56 41 57 48 8B EC 48 81 EC 80 00 00 00 49 8B F1",
+            (hooks, result) => this.getMsgByLabel = hooks.CreateWrapper<GetMessageByLabelIndex>(result, out _));
     }
 
-    private uint CompileMsgFileImpl(nint msgSrc, int msgSrcLength, nint msgFile, int param4, byte param5)
+    public MSG* GetMessageByLabelIdImpl(int msgId, int labelIdx, MsgFlag flags, MsgConfigs* configs)
+    {
+        var msgIdPtr = (int*)Marshal.AllocHGlobal(sizeof(int));
+        var flagsPtr = (MsgFlag*)Marshal.AllocHGlobal(sizeof(int));
+
+        *msgIdPtr = msgId;
+        *flagsPtr = flags;
+        return this.getMsgByLabel!(msgIdPtr, labelIdx, flagsPtr, (MsgConfigs*)0);
+    }
+
+    private uint CompileMsgFileImpl(nint msgSrc, int msgSrcLength, nint msgFile, int id, byte param5)
     {
         var msgPath = Marshal.PtrToStringAnsi(msgFile)!;
-        if (this.registry.TryGetModDict(msgPath, out var newMsgs) && newMsgs.Count > 0)
+        var msgDict = new GameMsg(msgSrc, msgSrcLength);
+        this.msgTable[ToLangAgnostic(msgPath)] = new(id - 1, msgDict);
+
+        if (this.registry.TryGetModMessages(msgPath, out var newMsgs))
         {
-            var msgDict = MessageParser.Parse(Marshal.PtrToStringAnsi(msgSrc, msgSrcLength)!);
             msgDict.Merge(newMsgs);
             var newMsgSrc = msgDict.ToMemory();
-
             if (this.devMode)
             {
-                Log.Information($"Merged MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+                Log.Information($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
             }
             else
             {
-                Log.Debug($"Merged MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+                Log.Debug($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
             }
 
-            var result = this.compileMsgFileHook!.OriginalFunction(newMsgSrc.Pointer, newMsgSrc.Length, msgFile, param4, param5);
+            var result = this.compileMsgFileHook!.OriginalFunction(newMsgSrc.Pointer, newMsgSrc.Length, msgFile, id, param5);
             Marshal.FreeHGlobal(newMsgSrc.Pointer); // Hopefully doesn't cause a crash lol.
             return result;
         }
 
         if (this.devMode)
         {
-            Log.Information($"MSG: {msgPath} || Param4: {param4} || Param5: {param5}");
+            Log.Information($"MSG: {msgPath} || ID: {id} || Param5: {param5}");
         }
 
-        return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, param4, param5);
+        return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
     }
 
-    public void SetItemText(int itemId, ItemText type, string text)
+    public string CreateItemMessage(ItemMessage type, string message)
+    {
+        if (!message.EndsWith("<WAIT>"))
+        {
+            message = $"{message}\n<WAIT>";
+        }
+
+        var msg = new Message()
+        {
+            Label = Guid.NewGuid().ToString(),
+            Content = message,
+        };
+
+        this.registry.RegisterMessage(GetItemMsgPath(type), msg);
+        return msg.Label;
+    }
+
+    public void SetItemMessage(int itemId, ItemMessage type, string label)
     {
         switch (type)
         {
-            case ItemText.Name:
-                this.itemNames[itemId] = text;
+            case ItemMessage.Name:
+                this.itemNames[itemId] = label;
                 break;
-            case ItemText.Description:
-                this.itemDescs[itemId] = text;
+            case ItemMessage.Description:
+                this.itemDescs[itemId] = label;
                 break;
-            case ItemText.Effect:
-                this.itemEffects[itemId] = text;
+            case ItemMessage.Effect:
+                this.itemEffects[itemId] = label;
                 break;
         }
     }
-    private MSG* GetItemMsgImpl(int* itemId, MsgFlags* msgFlags, ItemText type)
-    {
-        if (type == ItemText.Description)
+
+    private static string GetItemMsgPath(ItemMessage type)
+        => type switch
         {
-            if (this.itemDescs.TryGetValue(*itemId, out var desc))
+            ItemMessage.Name => "EN/message/system/Equip_Message_1.msg",
+            ItemMessage.Description => "EN/message/system/Equip_Message_2.msg",
+            ItemMessage.Effect => "EN/message/system/Equip_Message_3.msg",
+            _ => throw new Exception()
+        };
+
+    public MSG* GetMessage(string msgPath, string label, MsgFlag msgFlags)
+    {
+        var msgPathAnostic = ToLangAgnostic(msgPath);
+        if (this.msgTable.TryGetValue(msgPathAnostic, out var msg))
+        {
+            var id = msg.Msg.GetLabelId(label);
+            if (id != -1)
             {
-                var strPtr = Marshal.StringToHGlobalAnsi(desc);
-                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
-                Marshal.FreeHGlobal(strPtr);
-                return msg;
+                return this.GetMessageByLabelIdImpl(msg.Id, id, msgFlags, (MsgConfigs*)0);
             }
 
-            return this.getItemDescHook!.OriginalFunction(itemId, msgFlags);
+            Log.Warning($"Label not found. || MSG: {msgPathAnostic} || Label: {label}");
+        }
+        else
+        {
+            Log.Warning($"MSG not found. || MSG: {msgPathAnostic}");
         }
 
-        if (type == ItemText.Name)
+        Log.Warning($"Failed to get message.");
+        return null;
+    }
+
+    public MSG* GetMessage(string msgPath, int labelId, MsgFlag msgFlags)
+    {
+        if (this.msgTable.TryGetValue(msgPath, out var msg))
         {
-            if (this.itemNames.TryGetValue(*itemId, out var name))
+            return this.GetMessageByLabelIdImpl(msg.Id, labelId, msgFlags, (MsgConfigs*)0);
+        }
+
+        Log.Warning($"Failed to get message. || MSG: {msgPath} || Label ID: {labelId}");
+        return null;
+    }
+
+    private MSG* GetItemMsgImpl(int* itemId, MsgFlag* msgFlags, ItemMessage type)
+    {
+        var msgPath = ToLangAgnostic(GetItemMsgPath(type));
+
+        if (type == ItemMessage.Name)
+        {
+            if (this.itemNames.TryGetValue(*itemId, out var nameLabel))
             {
-                var strPtr = Marshal.StringToHGlobalAnsi(name);
-                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
-                Marshal.FreeHGlobal(strPtr);
-                return msg;
+                var nameMsg = this.GetMessage(msgPath, nameLabel, *msgFlags);
+                if (nameMsg != null)
+                {
+                    return nameMsg;
+                }
             }
 
             return this.getItemNameHook!.OriginalFunction(itemId, msgFlags);
         }
 
-        if (type == ItemText.Effect)
+        if (type == ItemMessage.Description)
         {
-            if (this.itemEffects.TryGetValue(*itemId, out var effect))
+            if (this.itemDescs.TryGetValue(*itemId, out var descLabel))
             {
-                var strPtr = Marshal.StringToHGlobalAnsi(effect);
-                var msg = this.createMsgFromString!(strPtr, *msgFlags, this.msgConfig1, this.msgConfig2);
-                Marshal.FreeHGlobal(strPtr);
-                return msg;
+                var descMsg = this.GetMessage(msgPath, descLabel, *msgFlags);
+                if (descMsg != null)
+                {
+                    return descMsg;
+                }
+            }
+
+            return this.getItemDescHook!.OriginalFunction(itemId, msgFlags);
+        }
+
+        if (type == ItemMessage.Effect)
+        {
+            if (this.itemEffects.TryGetValue(*itemId, out var effectLabel))
+            {
+                var effectMsg = this.GetMessage(msgPath, effectLabel, *msgFlags);
+                if (effectMsg != null)
+                {
+                    return effectMsg;
+                }
             }
 
             return this.getItemEffectHook!.OriginalFunction(itemId, msgFlags);
@@ -174,12 +266,12 @@ internal unsafe class MessageService : IMessage, IUseConfig
     public MSG* CreateMsg(string str)
     {
         var strPtr = Marshal.StringToHGlobalAnsi(str);
-        var msg = this.createMsgFromString!(strPtr, MsgFlags.Flag2, this.msgConfig1, this.msgConfig2);
+        var msg = this.createMsgFromString!(strPtr, MsgFlag.Flag2, this.msgConfig1, this.msgConfig2);
         Marshal.FreeHGlobal(strPtr);
         return msg;
     }
 
-    public MSG* CreateMsg(string str, MsgFlags flags, MsgConfig1 config1, MsgConfig2 config2)
+    public MSG* CreateMsg(string str, MsgFlag flags, MsgConfig1 config1, MsgConfig2 config2)
     {
         var strPtr = Marshal.StringToHGlobalAnsi(str);
         var c1 = (MsgConfig1*)Marshal.AllocHGlobal(sizeof(MsgConfig1));
@@ -194,7 +286,25 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return msg;
     }
 
+    private static string ToLangAgnostic(string msgPath)
+    {
+        foreach (var lang in Enum.GetValues<Language>())
+        {
+            msgPath = msgPath.Replace($"{lang.ToCode()}/", string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return msgPath;
+    }
+
     public void ConfigChanged(Config config) => this.devMode = config.DevMode;
 
     public void EditMsgFile(string msgFilePath, IEnumerable<Message> msgs) => this.registry.RegisterMessages(msgFilePath, msgs);
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct MsgConfigs // Probably, maybe accruate...
+{
+    public MsgConfig2 Config2;
+    public MsgConfig1 Config1;
 }

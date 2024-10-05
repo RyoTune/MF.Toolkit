@@ -21,7 +21,7 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
         }
     }
 
-    public bool TryGetModDict(string msgPath, [NotNullWhen(true)] out MessageDictionary? modDict)
+    public bool TryGetModMessages(string msgPath, [NotNullWhen(true)] out MessageList? modDict)
     {
         if (this.msgProviders.TryGetValue(msgPath, out var providers))
         {
@@ -49,6 +49,8 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
             }
         }
     }
+
+    public void RegisterMessage(string msgPath, Message msg) => this.RegisterMessages(msgPath, [msg]);
 
     public void RegisterMessages(string msgPath, IEnumerable<Message> messages) => this.RegisterProvider(msgPath, new ListMessages(messages));
 

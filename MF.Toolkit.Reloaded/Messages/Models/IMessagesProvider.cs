@@ -2,5 +2,5 @@
 
 public interface IMessagesProvider
 {
-    MessageDictionary Messages { get; }
+    MessageList Messages { get; }
 }

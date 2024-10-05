@@ -4,5 +4,5 @@ namespace MF.Toolkit.Reloaded.Messages.Models;
 
 internal class ListMessages(IEnumerable<Message> messages) : IMessagesProvider
 {
-    public MessageDictionary Messages => new(messages);
+    public MessageList Messages => new(messages);
 }
