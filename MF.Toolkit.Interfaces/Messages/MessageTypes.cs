@@ -62,7 +62,7 @@ public unsafe struct MSG
 {
 }
 
-public enum ItemMessage
+public enum ItemMsg
 {
     Name,
     Description,

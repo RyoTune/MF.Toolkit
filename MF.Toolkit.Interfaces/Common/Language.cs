@@ -4,8 +4,8 @@
 public enum Language
 {
     None,
-    DE,
     EN,
+    DE,
     ES,
     FR,
     IT,

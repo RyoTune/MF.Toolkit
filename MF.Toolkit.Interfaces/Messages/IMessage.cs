@@ -37,7 +37,9 @@ public unsafe interface IMessage
     /// <param name="type">Type of item message.</param>
     /// <param name="message">Message content.</param>
     /// <returns>MSG label assigned ot it.</returns>
-    string CreateItemMessage(ItemMessage type, string message);
+    string CreateItemMessage(ItemMsg type, string message);
+
+    LangItemMessages CreateItemMessages();
 
     /// <summary>
     /// Set the message label to use for an item's message.
@@ -45,5 +47,5 @@ public unsafe interface IMessage
     /// <param name="itemId">Item ID of item to set.</param>
     /// <param name="type">Type of message.</param>
     /// <param name="label">Message label to use.</param>
-    void SetItemMessage(int itemId, ItemMessage type, string label);
+    void SetItemMessage(int itemId, ItemMsg type, string label);
 }
