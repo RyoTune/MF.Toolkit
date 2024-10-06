@@ -3,7 +3,7 @@
 namespace MF.Toolkit.Interfaces.Messages.Models;
 
 /// <summary>
-/// Parsed MSG.
+/// Parsed MSG item.
 /// </summary>
 public class Message
 {
@@ -18,7 +18,7 @@ public class Message
     public string? Speaker { get; set; }
 
     /// <summary>
-    /// MSG content.
+    /// Message content.
     /// </summary>
     public string Content { get; set; } = string.Empty;
 

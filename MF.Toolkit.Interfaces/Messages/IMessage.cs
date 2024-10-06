@@ -39,7 +39,7 @@ public unsafe interface IMessage
     /// <returns>MSG label assigned ot it.</returns>
     string CreateItemMessage(ItemMsg type, string message);
 
-    LangItemMessages CreateItemMessages();
+    ILangItemMessages CreateItemMessages();
 
     /// <summary>
     /// Set the message label to use for an item's message.
