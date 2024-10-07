@@ -4,6 +4,9 @@ using MF.Toolkit.Interfaces.Messages.Models;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Messages.Models;
+using MF.Toolkit.Reloaded.Messages.Models.ItemMessages;
+using MF.Toolkit.Reloaded.Messages.Models.MessageLists;
+using MF.Toolkit.Reloaded.Messages.Models.MessageProviders;
 using Reloaded.Hooks.Definitions;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
@@ -35,7 +38,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
     private IHook<CompileMsgFile>? compileMsgFileHook;
     private GetMessageByLabelIndex? getMsgByLabel;
 
-    private record MsgTableEntry(int Id, GameMsg Msg);
+    private record MsgTableEntry(int Id, GameMessageList Msg);
     private readonly ConcurrentDictionary<string, MsgTableEntry> msgTable = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly MsgConfig1* msgConfig1;
@@ -67,7 +70,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 var offset = (int*)(result + 0x2d + 1);
                 var offsetValue = *offset;
                 var funcAddress = offsetValue + (nint)offset + 4;
-                this.getItemNameHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Name), funcAddress).Activate();
+                this.getItemNameHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMsg.Name), funcAddress).Activate();
             });
 
         ScanHooks.Add(
@@ -78,13 +81,13 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 var offset = (int*)(result + 0x8e + 1);
                 var offsetValue = *offset;
                 var funcAddress = offsetValue + (nint)offset + 4;
-                this.getItemEffectHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Effect), funcAddress).Activate();
+                this.getItemEffectHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMsg.Effect), funcAddress).Activate();
             });
 
         ScanHooks.Add(
             "GetItemDescriptionMsg",
             "48 89 5C 24 ?? 57 48 83 EC 20 48 8B D9 48 8B FA 8B 09 E8 ?? ?? ?? ?? 83 F8 4D",
-            (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMessage.Description), result).Activate());
+            (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMsg.Description), result).Activate());
 
         ScanHooks.Add(
             nameof(CompileMsgFile),
@@ -104,19 +107,19 @@ internal unsafe class MessageService : IMessage, IUseConfig
 
         *msgIdPtr = msgId;
         *flagsPtr = flags;
-        return this.getMsgByLabel!(msgIdPtr, labelIdx, flagsPtr, (MsgConfigs*)0);
+        return this.getMsgByLabel!(msgIdPtr, labelIdx, flagsPtr, configs);
     }
 
     private uint CompileMsgFileImpl(nint msgSrc, int msgSrcLength, nint msgFile, int id, byte param5)
     {
         var msgPath = Marshal.PtrToStringAnsi(msgFile)!;
-        var msgDict = new GameMsg(msgSrc, msgSrcLength);
-        this.msgTable[ToLangAgnostic(msgPath)] = new(id - 1, msgDict);
+        var gameMessages = new GameMessageList(msgSrc, msgSrcLength);
+        this.msgTable[MsgUtils.ToLangAgnostic(msgPath)] = new(id - 1, gameMessages);
 
-        if (this.registry.TryGetModMessages(msgPath, out var newMsgs))
+        if (this.registry.TryGetModMessages(msgPath, out var messages))
         {
-            msgDict.Merge(newMsgs);
-            var newMsgSrc = msgDict.ToMemory();
+            gameMessages.Merge(messages);
+            var newMsgSrc = gameMessages.ToMemory();
             if (this.devMode)
             {
                 Log.Information($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
@@ -139,7 +142,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
     }
 
-    public string CreateItemMessage(ItemMessage type, string message)
+    public string CreateItemMessage(ItemMsg type, string message)
     {
         if (!message.EndsWith("<WAIT>"))
         {
@@ -152,38 +155,28 @@ internal unsafe class MessageService : IMessage, IUseConfig
             Content = message,
         };
 
-        this.registry.RegisterMessage(GetItemMsgPath(type), msg);
         return msg.Label;
     }
 
-    public void SetItemMessage(int itemId, ItemMessage type, string label)
+    public void SetItemMessage(int itemId, ItemMsg type, string label)
     {
         switch (type)
         {
-            case ItemMessage.Name:
+            case ItemMsg.Name:
                 this.itemNames[itemId] = label;
                 break;
-            case ItemMessage.Description:
+            case ItemMsg.Description:
                 this.itemDescs[itemId] = label;
                 break;
-            case ItemMessage.Effect:
+            case ItemMsg.Effect:
                 this.itemEffects[itemId] = label;
                 break;
         }
     }
 
-    private static string GetItemMsgPath(ItemMessage type)
-        => type switch
-        {
-            ItemMessage.Name => "EN/message/system/Equip_Message_1.msg",
-            ItemMessage.Description => "EN/message/system/Equip_Message_2.msg",
-            ItemMessage.Effect => "EN/message/system/Equip_Message_3.msg",
-            _ => throw new Exception()
-        };
-
     public MSG* GetMessage(string msgPath, string label, MsgFlag msgFlags)
     {
-        var msgPathAnostic = ToLangAgnostic(msgPath);
+        var msgPathAnostic = MsgUtils.ToLangAgnostic(msgPath);
         if (this.msgTable.TryGetValue(msgPathAnostic, out var msg))
         {
             var id = msg.Msg.GetLabelId(label);
@@ -214,11 +207,10 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return null;
     }
 
-    private MSG* GetItemMsgImpl(int* itemId, MsgFlag* msgFlags, ItemMessage type)
+    private MSG* GetItemMsgImpl(int* itemId, MsgFlag* msgFlags, ItemMsg type)
     {
-        var msgPath = ToLangAgnostic(GetItemMsgPath(type));
-
-        if (type == ItemMessage.Name)
+        var msgPath = MsgUtils.GetItemMsgPath(Language.Any, type);
+        if (type == ItemMsg.Name)
         {
             if (this.itemNames.TryGetValue(*itemId, out var nameLabel))
             {
@@ -232,7 +224,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
             return this.getItemNameHook!.OriginalFunction(itemId, msgFlags);
         }
 
-        if (type == ItemMessage.Description)
+        if (type == ItemMsg.Description)
         {
             if (this.itemDescs.TryGetValue(*itemId, out var descLabel))
             {
@@ -246,7 +238,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
             return this.getItemDescHook!.OriginalFunction(itemId, msgFlags);
         }
 
-        if (type == ItemMessage.Effect)
+        if (type == ItemMsg.Effect)
         {
             if (this.itemEffects.TryGetValue(*itemId, out var effectLabel))
             {
@@ -286,19 +278,29 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return msg;
     }
 
-    private static string ToLangAgnostic(string msgPath)
-    {
-        foreach (var lang in Enum.GetValues<Language>())
-        {
-            msgPath = msgPath.Replace($"{lang.ToCode()}/", string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
-
-        return msgPath;
-    }
-
     public void ConfigChanged(Config config) => this.devMode = config.DevMode;
 
-    public void EditMsgFile(string msgFilePath, IEnumerable<Message> msgs) => this.registry.RegisterMessages(msgFilePath, msgs);
+    public void EditMsg(string msgFilePath, IEnumerable<Message> msgs) { }
+
+    public ILangItemMessages CreateItemMessages()
+    {
+        var itemMessages = new LangItemMessages();
+        foreach (var lang in Enum.GetValues<Language>())
+        {
+            if (lang == Language.Any) continue;
+
+            var (name, desc, effect) = itemMessages.GetLanguage(lang).GetMessages();
+            var itemMsg = new Msg(MsgUtils.GetItemMsgPath(lang, ItemMsg.Name), new SingleMessage(name));
+            var descMsg = new Msg(MsgUtils.GetItemMsgPath(lang, ItemMsg.Description), new SingleMessage(desc));
+            var effectMsg = new Msg(MsgUtils.GetItemMsgPath(lang, ItemMsg.Effect), new SingleMessage(effect));
+
+            registry.RegisterMsg(lang, itemMsg);
+            registry.RegisterMsg(lang, descMsg);
+            registry.RegisterMsg(lang, effectMsg);
+        }
+
+        return itemMessages;
+    }
 }
 
 

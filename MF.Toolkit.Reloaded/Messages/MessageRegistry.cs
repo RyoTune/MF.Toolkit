@@ -1,16 +1,17 @@
 ﻿using MF.Toolkit.Interfaces.Common;
-using MF.Toolkit.Interfaces.Messages.Models;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Messages.Models;
+using MF.Toolkit.Reloaded.Messages.Models.MessageLists;
+using MF.Toolkit.Reloaded.Messages.Models.MSGs;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MF.Toolkit.Reloaded.Messages;
 
 internal class MessageRegistry : IRegisterMod, IUseConfig
 {
-    private readonly Dictionary<string, List<IMessagesProvider>> msgProviders = new(StringComparer.OrdinalIgnoreCase);
-    private Language langPref;
+    private readonly MsgsLangMap _msgs = [];
+    private Language _secondLang;
 
     public void RegisterMod(string modId, string modDir)
     {
@@ -21,113 +22,32 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
         }
     }
 
-    public bool TryGetModMessages(string msgPath, [NotNullWhen(true)] out MessageList? modDict)
+    public bool TryGetModMessages(string msgPath, [NotNullWhen(true)] out MessageList? messages)
     {
-        if (this.msgProviders.TryGetValue(msgPath, out var providers))
+        if (_msgs.TryGetMessages(msgPath, _secondLang, out messages))
         {
-            modDict = [];
-            foreach (var provider in providers)
-            {
-                modDict.Merge(provider.Messages);
-            }
-
-            return true;
+            Log.Debug($"Using mod messages for MSG: {msgPath}");
+        }
+        else
+        {
+            Log.Debug($"No mod messages for MSG: {msgPath}");
         }
 
-        modDict = null;
-        return false;
+        return messages != null;
     }
 
     public void RegisterFolder(string folder)
     {
-        var filesRegistered = new HashSet<string>();
         foreach (var file in Directory.EnumerateFiles(folder, "*.msg", SearchOption.AllDirectories))
         {
-            if (!filesRegistered.Contains(file))
-            {
-                this.RegisterWithLanguages(folder, file, filesRegistered);
-            }
+            var msgPath = Path.GetRelativePath(folder, file);
+            var msgLang = MsgUtils.GetMsgLanguage(msgPath);
+            var fileMsg = new FileMsg(msgPath, file);
+            _msgs.RegisterMsg(msgLang, fileMsg);
         }
     }
 
-    public void RegisterMessage(string msgPath, Message msg) => this.RegisterMessages(msgPath, [msg]);
+    public void RegisterMsg(Language language, IMsg msg) => _msgs.RegisterMsg(language, msg);
 
-    public void RegisterMessages(string msgPath, IEnumerable<Message> messages) => this.RegisterProvider(msgPath, new ListMessages(messages));
-
-    private void RegisterProvider(string msgPath, IMessagesProvider provider)
-    {
-        msgPath = msgPath.Replace('\\', '/');
-        if (this.msgProviders.TryGetValue(msgPath, out var existing))
-        {
-            existing.Add(provider);
-        }
-        else
-        {
-            this.msgProviders[msgPath] = [provider];
-        }
-    }
-
-    private void RegisterWithLanguages(string baseDir, string inputFile, HashSet<string> filesRegistered)
-    {
-        var inputMsgPath = Path.GetRelativePath(baseDir, inputFile);
-        var inputLang = Enum.GetValues<Language>().FirstOrDefault(x => inputMsgPath.StartsWith(x.ToCode(), StringComparison.OrdinalIgnoreCase));
-        if (inputLang == Language.None)
-        {
-            var msgProvider = new FileMessages(inputFile);
-            this.RegisterProvider(inputMsgPath, msgProvider);
-            filesRegistered.Add(inputFile);
-            Log.Information($"Registered MSG: {inputMsgPath}\nFile: {inputFile}");
-            return;
-        }
-
-        var baseMsgPath = inputMsgPath.Substring(inputMsgPath.IndexOf(inputLang.ToCode()) + inputLang.ToCode().Length);
-        var langFiles = new Dictionary<Language, string>();
-
-        // Find all available language files first.
-        foreach (var lang in Enum.GetValues<Language>())
-        {
-            if (lang == Language.None) continue;
-
-            var langFile = Path.Join(baseDir, lang.ToCode(), baseMsgPath);
-            if (File.Exists(langFile))
-            {
-                langFiles[lang] = langFile;
-                filesRegistered.Add(langFile);
-            }
-        }
-
-        foreach (var lang in Enum.GetValues<Language>())
-        {
-            if (lang == Language.None) continue;
-
-            var langMsgPath = Path.Join(lang.ToCode(), baseMsgPath);
-
-            // Mod has file for lang.
-            if (langFiles.TryGetValue(lang, out var file))
-            {
-                var msgProvider = new FileMessages(file);
-                this.RegisterProvider(langMsgPath, msgProvider);
-                Log.Information($"Registered MSG ({lang}): {langMsgPath}\nFile: {file}");
-            }
-
-            // Mod does not have file for lang, use preferred lang.
-            else if (langFiles.TryGetValue(this.langPref, out var prefFile))
-            {
-                var msgProvider = new FileMessages(prefFile);
-                this.RegisterProvider(langMsgPath, msgProvider);
-                Log.Information($"Registered MSG (Preferred: {lang}->{this.langPref}): {langMsgPath}\nFile: {prefFile}");
-            }
-
-            // Mod does not have preferred language, use first available.
-            else
-            {
-                (var fallbackLang, var fallbackFile) = langFiles.First();
-                var msgProvider = new FileMessages(fallbackFile);
-                this.RegisterProvider(langMsgPath, msgProvider);
-                Log.Information($"Registered MSG (Fallback: {lang}->{fallbackLang}): {langMsgPath}\nFile: {fallbackFile}");
-            }
-        }
-    }
-
-    public void ConfigChanged(Config config) => this.langPref = config.LangPref;
+    public void ConfigChanged(Config config) => _secondLang = config.SecondLanguage;
 }

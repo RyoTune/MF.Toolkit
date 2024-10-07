@@ -10,10 +10,10 @@ public class Config : Configurable<Config>
     [DefaultValue(LogLevel.Information)]
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
-    [DisplayName("Preferred Language")]
-    [Description("The preferred language to use for files when a mod does not support a language.\nIf a mod does not support the preferred language neither, a fallback will be used.")]
+    [DisplayName("Second Language")]
+    [Description("The preferred language to use for files when a mod does not support a language.\nIf neither is supported, whatever is available will be used with a preference for English.")]
     [DefaultValue(Language.EN)]
-    public Language LangPref { get; set; } = Language.EN;
+    public Language SecondLanguage { get; set; } = Language.EN;
 
     [DisplayName("Developer Mode")]
     [DefaultValue(false)]

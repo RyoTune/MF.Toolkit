@@ -1,12 +1,12 @@
 ﻿using MF.Toolkit.Interfaces.Messages.Models;
-using MF.Toolkit.Reloaded.Messages.Models;
+using MF.Toolkit.Reloaded.Messages.Models.MessageLists;
 using Superpower;
 using Superpower.Parsers;
 using Superpower.Tokenizers;
 
 namespace MF.Toolkit.Reloaded.Messages.Parser;
 
-public partial class MessageParser
+public class MessageParser
 {
     private static readonly Tokenizer<MessageToken> _tokenizer = new TokenizerBuilder<MessageToken>()
         .Ignore(Comment.CPlusPlusStyle)

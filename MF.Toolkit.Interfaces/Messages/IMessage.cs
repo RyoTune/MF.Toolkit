@@ -10,9 +10,9 @@ public unsafe interface IMessage
     /// <summary>
     /// Add to or edit an existing MSG file.
     /// </summary>
-    /// <param name="msgFilePath">MSG file to edit.</param>
-    /// <param name="msgs">New MSGs.</param>
-    void EditMsgFile(string msgFilePath, IEnumerable<Message> msgs);
+    /// <param name="msgPath">MSG file to edit.</param>
+    /// <param name="messages">New messages.</param>
+    void EditMsg(string msgPath, IEnumerable<Message> messages);
 
     /// <summary>
     /// Create a MSG from a string (plaintext).
@@ -32,13 +32,10 @@ public unsafe interface IMessage
     MSG* CreateMsg(string str, MsgFlag flags, MsgConfig1 config1, MsgConfig2 config2);
 
     /// <summary>
-    /// Creates an item message and returns the label assigned to it.
+    /// Creates a set of item messages for setting name, description, and effect
+    /// with per language settings, if needed.
     /// </summary>
-    /// <param name="type">Type of item message.</param>
-    /// <param name="message">Message content.</param>
-    /// <returns>MSG label assigned ot it.</returns>
-    string CreateItemMessage(ItemMsg type, string message);
-
+    /// <returns>Message label to use for referencing the messages.</returns>
     ILangItemMessages CreateItemMessages();
 
     /// <summary>
