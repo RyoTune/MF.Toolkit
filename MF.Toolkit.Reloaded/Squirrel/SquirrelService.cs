@@ -55,7 +55,7 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
 
         this.newClosure = scans.CreateHook<sq_newclosure>(this.NewClosure, Mod.NAME);
 
-        this.timer = new System.Timers.Timer(TimeSpan.FromSeconds(1)) { AutoReset = false };
+        this.timer = new System.Timers.Timer(1000) { AutoReset = false };
         this.timer.Elapsed += (sender, args) =>
         {
             if (this.dumpFunctions)
@@ -88,14 +88,6 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
             if (this.knownFuncs.Contains(funcLoc) == false)
             {
                 var funcName = Marshal.PtrToStringAnsi(*nameBuffer)!;
-                if (this.devMode)
-                {
-                    Log.Information($"Function: {funcName} || 0x{funcLoc:X}");
-                }
-                else
-                {
-                    Log.Debug($"Function: {funcName} || 0x{funcLoc:X}");
-                }
 
                 // func = premade functions that take in the native function
                 //        as a single userdata.
@@ -108,7 +100,7 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
         }
         else if (this.knownFuncs.Contains(func) == false)
         {
-            Log.Debug($"{nameof(sq_newclosure)} || Func: 0x{func:X} || Function has no pushed name or {nameof(sq_getstring)} failed.");
+            Log.Verbose($"{nameof(sq_newclosure)} || Func: 0x{func:X} || Function has no pushed name or {nameof(sq_getstring)} failed.");
             this.knownFuncs.Add(func);
         }
 

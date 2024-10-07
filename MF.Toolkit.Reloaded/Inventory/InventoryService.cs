@@ -51,7 +51,7 @@ internal class InventoryService : IUseConfig
 
     private byte GetItemCountImpl(ItemType type, ushort itemId)
     {
-        Log.Debug($"{nameof(GetItemCount)} ({type}): {itemId}");
+        Log.Verbose($"{nameof(GetItemCount)} ({type}): {itemId}");
         return unlockAllItems ? (byte)1 : hooks[type].OriginalFunction(itemId);
     }
 

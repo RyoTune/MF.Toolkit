@@ -27,7 +27,11 @@ internal static class MsgUtils
     {
         foreach (var lang in Enum.GetValues<Language>())
         {
-            msgPath = msgPath.Replace($"{lang.ToCode()}", string.Empty, StringComparison.OrdinalIgnoreCase);
+            var langCode = lang.ToCode();
+            if (msgPath.StartsWith(langCode))
+            {
+                msgPath = msgPath.Substring(langCode.Length + 1);
+            }
         }
 
         msgPath = msgPath.TrimStart('\\', '/');
