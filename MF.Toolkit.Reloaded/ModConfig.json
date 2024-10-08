@@ -14,7 +14,7 @@
   "ReleaseMetadataFileName": "MF.Toolkit.Reloaded.ReleaseMetadata.json",
   "PluginData": {},
   "IsUniversalMod": false,
-  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII", "SharedScans.Reloaded" ],
+  "ModDependencies": [ "reloaded.sharedlib.hooks", "Reloaded.Memory.SigScan.ReloadedII", "SharedScans.Reloaded", "crifs.v2.hook" ],
   "OptionalDependencies": [],
   "SupportedAppId": ["metaphor.exe"],
   "ProjectUrl": ""

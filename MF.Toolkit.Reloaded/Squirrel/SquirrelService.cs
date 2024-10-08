@@ -128,16 +128,12 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
     public sq_newclosure sq_newclosure => _newclosure.Wrapper;
     public sq_getuserdata sq_getuserdata => _getuserdata.Wrapper;
 
-    private class Function(string name, nint address, int numArgs = -1, int retType = -1)
+    private class Function(string name, nint address)
     {
         public string Name { get; } = name;
 
         public string Address { get; } = $"0x{address:X}";
 
         public string Offset { get; } = $"0x{address - Utilities.BaseAddress:X}";
-
-        public int NumArgs { get; } = numArgs;
-
-        public int RetType { get; } = retType;
     }
 }

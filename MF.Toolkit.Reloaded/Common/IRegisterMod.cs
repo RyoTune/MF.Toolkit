@@ -2,5 +2,5 @@
 
 internal interface IRegisterMod
 {
-    void RegisterMod(string modId, string modDir);
+    void RegisterMod(string modId, string metaDir);
 }

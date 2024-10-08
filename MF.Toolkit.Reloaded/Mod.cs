@@ -1,4 +1,5 @@
-﻿using MF.Toolkit.Interfaces.Library;
+﻿using CriFs.V2.Hook.Interfaces;
+using MF.Toolkit.Interfaces.Library;
 using MF.Toolkit.Interfaces.Messages;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
@@ -6,6 +7,7 @@ using MF.Toolkit.Reloaded.Inventory;
 using MF.Toolkit.Reloaded.Library;
 using MF.Toolkit.Reloaded.Messages;
 using MF.Toolkit.Reloaded.Squirrel;
+using MF.Toolkit.Reloaded.Squirrel.Scripts;
 using MF.Toolkit.Reloaded.Template;
 using Reloaded.Hooks.ReloadedII.Interfaces;
 using Reloaded.Mod.Interfaces;
@@ -26,65 +28,84 @@ public class Mod : ModBase, IExports
     private Config config;
     private readonly IModConfig modConfig;
 
-    private readonly List<IUseConfig> configurables = [];
-    private readonly List<IRegisterMod> modders = [];
+    private readonly List<IUseConfig> _configurables = [];
+    private readonly List<IRegisterMod> _modders = [];
 
-    private readonly MetaphorLibrary metaphor;
-    private readonly SquirrelService squirrel;
-    private readonly InventoryService inventory;
-    private readonly MessageService message;
-    private readonly MessageRegistry messageRegistry;
+    private readonly MetaphorLibrary _metaphor;
+    private readonly SquirrelService _squirrel;
+    private readonly ScriptsRegistry _scriptsRegistry;
+    private readonly ScriptsService _scriptsService;
+    private readonly GameFileProvider _fileProvider;
+    private readonly InventoryService _inventory;
+    private readonly MessageService _message;
+    private readonly MessageRegistry _messageRegistry;
 
     public Mod(ModContext context)
     {
-        this.modLoader = context.ModLoader;
-        this.hooks = context.Hooks;
-        this.log = context.Logger;
-        this.owner = context.Owner;
-        this.config = context.Configuration;
-        this.modConfig = context.ModConfig;
+        modLoader = context.ModLoader;
+        hooks = context.Hooks;
+        log = context.Logger;
+        owner = context.Owner;
+        config = context.Configuration;
+        modConfig = context.ModConfig;
 
 #if DEBUG
         Debugger.Launch();
 #endif
 
-        Project.Init(this.modConfig, this.modLoader, this.log, true);
-        Log.LogLevel = this.config.LogLevel;
+        Project.Init(modConfig, modLoader, log, true);
+        Log.LogLevel = config.LogLevel;
 
-        var modDir = this.modLoader.GetDirectoryForModId(this.modConfig.ModId);
-        this.modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
+        var modDir = modLoader.GetDirectoryForModId(modConfig.ModId);
+        modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
+        modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFs);
 
-        this.squirrel = new(scans!, modDir);
-        this.configurables.Add(this.squirrel);
-        this.modLoader.AddOrReplaceController<ISquirrel>(this.owner, this.squirrel);
+        _fileProvider = new(criFs!);
 
-        this.metaphor = new MetaphorLibrary(scans!);
-        this.modLoader.AddOrReplaceController<IMetaphorLibrary>(this.owner, this.metaphor);
+        _squirrel = new SquirrelService(scans!, modDir);
+        _scriptsRegistry = new ScriptsRegistry(criFs!, _fileProvider, modDir);
+        _scriptsService = new ScriptsService(_scriptsRegistry);
+        _configurables.Add(_squirrel);
+        _modders.Add(_scriptsRegistry);
+        modLoader.AddOrReplaceController<ISquirrel>(owner, _squirrel);
 
-        this.inventory = new InventoryService();
-        this.configurables.Add(this.inventory);
+        _metaphor = new MetaphorLibrary(scans!);
+        modLoader.AddOrReplaceController<IMetaphorLibrary>(owner, _metaphor);
 
-        this.messageRegistry = new MessageRegistry();
-        this.modders.Add(this.messageRegistry);
-        this.configurables.Add(this.messageRegistry);
+        _inventory = new InventoryService();
+        _configurables.Add(_inventory);
 
-        this.message = new MessageService(this.messageRegistry);
-        this.configurables.Add(this.message);
-        this.modLoader.AddOrReplaceController<IMessage>(this.owner, this.message);
+        _messageRegistry = new MessageRegistry();
+        _modders.Add(_messageRegistry);
+        _configurables.Add(_messageRegistry);
 
-        this.modLoader.ModLoaded += this.OnModLoaded;
-        this.ConfigurationUpdated(this.config);
+        _message = new MessageService(_messageRegistry);
+        _configurables.Add(_message);
+        modLoader.AddOrReplaceController<IMessage>(owner, _message);
+
+        modLoader.ModLoaded += OnModLoaded;
+        modLoader.OnModLoaderInitialized += OnInitialized;
+        ConfigurationUpdated(config);
         Project.Start();
+    }
+
+    private void OnInitialized()
+    {
+        _scriptsRegistry.MergeNuts();
     }
 
     private void OnModLoaded(IModV1 mod, IModConfigV1 config)
     {
-        if (config.ModDependencies.Contains(this.modConfig.ModId))
+        if (config.ModDependencies.Contains(modConfig.ModId))
         {
-            foreach (var modder in this.modders)
+            var modDir = modLoader.GetDirectoryForModId(config.ModId);
+            var metaDir = Path.Join(modDir, "Metaphor");
+            if (Directory.Exists(metaDir))
             {
-                var modDir = this.modLoader.GetDirectoryForModId(config.ModId);
-                modder.RegisterMod(config.ModId, modDir);
+                foreach (var modder in _modders)
+                {
+                    modder.RegisterMod(config.ModId, metaDir);
+                }
             }
         }
     }
@@ -98,7 +119,7 @@ public class Mod : ModBase, IExports
         log.WriteLine($"[{modConfig.ModId}] Config Updated: Applying");
 
         Log.LogLevel = configuration.LogLevel;
-        foreach (var item in this.configurables) item.ConfigChanged(config);
+        foreach (var item in _configurables) item.ConfigChanged(config);
     }
 
     public Type[] GetTypes() => [ typeof(ISquirrel), typeof(IMetaphorLibrary), typeof(IMessage) ];

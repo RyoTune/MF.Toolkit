@@ -13,14 +13,7 @@ internal class MessageRegistry : IRegisterMod, IUseConfig
     private readonly MsgsLangMap _msgs = [];
     private Language _secondLang;
 
-    public void RegisterMod(string modId, string modDir)
-    {
-        var msgsDir = Path.Join(modDir, "Metaphor", "MSG");
-        if (Directory.Exists(msgsDir))
-        {
-            this.RegisterFolder(msgsDir);
-        }
-    }
+    public void RegisterMod(string modId, string metaDir) => RegisterFolder(metaDir);
 
     public bool TryGetModMessages(string msgPath, [NotNullWhen(true)] out MessageList? messages)
     {
