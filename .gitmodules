@@ -1,0 +1,3 @@
+[submodule "submodules/CNutSharp"]
+	path = submodules/CNutSharp
+	url = https://github.com/RyoTune/CNutSharp.git
