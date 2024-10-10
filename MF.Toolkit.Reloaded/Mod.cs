@@ -1,4 +1,5 @@
-﻿using CriFs.V2.Hook.Interfaces;
+﻿using CNutSharp.Library.Squirrel;
+using CriFs.V2.Hook.Interfaces;
 using MF.Toolkit.Interfaces.Library;
 using MF.Toolkit.Interfaces.Messages;
 using MF.Toolkit.Reloaded.Common;
@@ -28,6 +29,7 @@ public class Mod : ModBase, IExports
     private Config config;
     private readonly IModConfig modConfig;
 
+    private readonly MLogger _mlog;
     private readonly List<IUseConfig> _configurables = [];
     private readonly List<IRegisterMod> _modders = [];
 
@@ -36,6 +38,7 @@ public class Mod : ModBase, IExports
     private readonly ScriptsRegistry _scriptsRegistry;
     private readonly ScriptsService _scriptsService;
     private readonly GameFileProvider _fileProvider;
+    private readonly SqCompiler _sqCompiler;
     private readonly InventoryService _inventory;
     private readonly MessageService _message;
     private readonly MessageRegistry _messageRegistry;
@@ -55,15 +58,17 @@ public class Mod : ModBase, IExports
 
         Project.Init(modConfig, modLoader, log, true);
         Log.LogLevel = config.LogLevel;
+        _mlog = new();
 
         var modDir = modLoader.GetDirectoryForModId(modConfig.ModId);
         modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
         modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFs);
 
         _fileProvider = new(criFs!);
+        _sqCompiler = new SqCompiler(Path.Join(modDir, "Squirrel", "Compiler", "sq.exe"), _mlog);
 
         _squirrel = new SquirrelService(scans!, modDir);
-        _scriptsRegistry = new ScriptsRegistry(criFs!, _fileProvider, modDir);
+        _scriptsRegistry = new ScriptsRegistry(criFs!, _fileProvider, _sqCompiler, modDir);
         _scriptsService = new ScriptsService(_scriptsRegistry);
         _configurables.Add(_squirrel);
         _modders.Add(_scriptsRegistry);
