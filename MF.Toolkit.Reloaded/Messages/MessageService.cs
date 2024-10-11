@@ -86,7 +86,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
 
         ScanHooks.Add(
             "GetItemDescriptionMsg",
-            "48 89 5C 24 ?? 57 48 83 EC 20 48 8B D9 48 8B FA 8B 09 E8 ?? ?? ?? ?? 83 F8 4D",
+            "48 89 5C 24 ?? 57 48 83 EC 20 48 89 CB 48 89 D7 8B 09 E8",
             (hooks, result) => this.getItemDescHook = hooks.CreateHook<GetItemMsg>((a, b) => this.GetItemMsgImpl(a, b, ItemMsg.Description), result).Activate());
 
         ScanHooks.Add(
