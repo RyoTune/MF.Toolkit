@@ -1,5 +1,6 @@
 ﻿using CNutSharp.Library.Squirrel;
 using CriFs.V2.Hook.Interfaces;
+using MF.Toolkit.Interfaces.Inventory;
 using MF.Toolkit.Interfaces.Library;
 using MF.Toolkit.Interfaces.Messages;
 using MF.Toolkit.Reloaded.Common;
@@ -21,7 +22,7 @@ namespace MF.Toolkit.Reloaded;
 public class Mod : ModBase, IExports
 {
     public const string NAME = "MF.Toolkit.Reloaded";
-    private readonly IModLoader modLoader;
+    private readonly IModLoader _modLoader;
     private readonly IReloadedHooks? hooks;
     private readonly ILogger log;
     private readonly IMod owner;
@@ -45,7 +46,7 @@ public class Mod : ModBase, IExports
 
     public Mod(ModContext context)
     {
-        modLoader = context.ModLoader;
+        _modLoader = context.ModLoader;
         hooks = context.Hooks;
         log = context.Logger;
         owner = context.Owner;
@@ -56,13 +57,13 @@ public class Mod : ModBase, IExports
         Debugger.Launch();
 #endif
 
-        Project.Init(modConfig, modLoader, log, true);
+        Project.Init(modConfig, _modLoader, log, true);
         Log.LogLevel = config.LogLevel;
         _mlog = new();
 
-        var modDir = modLoader.GetDirectoryForModId(modConfig.ModId);
-        modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
-        modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFs);
+        var modDir = _modLoader.GetDirectoryForModId(modConfig.ModId);
+        _modLoader.GetController<ISharedScans>().TryGetTarget(out var scans);
+        _modLoader.GetController<ICriFsRedirectorApi>().TryGetTarget(out var criFs);
 
         _fileProvider = new(criFs!);
         _sqCompiler = new SqCompiler(Path.Join(modDir, "Squirrel", "Compiler", "sq.exe"), _mlog);
@@ -72,13 +73,14 @@ public class Mod : ModBase, IExports
         _scriptsService = new ScriptsService(_scriptsRegistry);
         _configurables.Add(_squirrel);
         _modders.Add(_scriptsRegistry);
-        modLoader.AddOrReplaceController<ISquirrel>(owner, _squirrel);
+        _modLoader.AddOrReplaceController<ISquirrel>(owner, _squirrel);
 
         _metaphor = new MetaphorLibrary(scans!);
-        modLoader.AddOrReplaceController<IMetaphorLibrary>(owner, _metaphor);
+        _modLoader.AddOrReplaceController<IMetaphorLibrary>(owner, _metaphor);
 
         _inventory = new InventoryService();
         _configurables.Add(_inventory);
+        _modLoader.AddOrReplaceController<IInventory>(owner, _inventory);
 
         _messageRegistry = new MessageRegistry();
         _modders.Add(_messageRegistry);
@@ -86,10 +88,10 @@ public class Mod : ModBase, IExports
 
         _message = new MessageService(_messageRegistry);
         _configurables.Add(_message);
-        modLoader.AddOrReplaceController<IMessage>(owner, _message);
+        _modLoader.AddOrReplaceController<IMessage>(owner, _message);
 
-        modLoader.ModLoaded += OnModLoaded;
-        modLoader.OnModLoaderInitialized += OnInitialized;
+        _modLoader.ModLoaded += OnModLoaded;
+        _modLoader.OnModLoaderInitialized += OnInitialized;
         ConfigurationUpdated(config);
         Project.Start();
     }
@@ -103,7 +105,7 @@ public class Mod : ModBase, IExports
     {
         if (config.ModDependencies.Contains(modConfig.ModId))
         {
-            var modDir = modLoader.GetDirectoryForModId(config.ModId);
+            var modDir = _modLoader.GetDirectoryForModId(config.ModId);
             var metaDir = Path.Join(modDir, "Metaphor");
             if (Directory.Exists(metaDir))
             {

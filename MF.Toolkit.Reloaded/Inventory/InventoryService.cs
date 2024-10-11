@@ -1,14 +1,17 @@
-﻿using MF.Toolkit.Reloaded.Common;
+﻿using MF.Toolkit.Interfaces.Inventory;
+using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using Reloaded.Hooks.Definitions;
 
 namespace MF.Toolkit.Reloaded.Inventory;
 
-internal class InventoryService : IUseConfig
+internal class InventoryService : IUseConfig, IInventory
 {
     private delegate byte GetItemCount(ushort itemId);
     private readonly Dictionary<ItemType, IHook<GetItemCount>> hooks = [];
     private bool unlockAllItems;
+
+    private HashSet<int> _unlockedItems = [];
 
     public InventoryService()
     {
@@ -52,10 +55,20 @@ internal class InventoryService : IUseConfig
     private byte GetItemCountImpl(ItemType type, ushort itemId)
     {
         Log.Verbose($"{nameof(GetItemCount)} ({type}): {itemId}");
+        var genItemid = GetGenericItemId(type, itemId);
+        if (_unlockedItems.Contains(genItemid))
+        {
+            return 1;
+        }
+
         return unlockAllItems ? (byte)1 : hooks[type].OriginalFunction(itemId);
     }
 
+    public void UnlockItem(int itemId) => _unlockedItems.Add(itemId);
+
     public void ConfigChanged(Config config) => this.unlockAllItems = config.UnlockAllItems;
+
+    private static int GetGenericItemId(ItemType type, int itemId) => (int)type * 0x1000 + itemId;
 
     private enum ItemType
     {
