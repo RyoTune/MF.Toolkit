@@ -58,13 +58,18 @@ internal class InventoryService : IUseConfig, IInventory
         var genItemid = GetGenericItemId(type, itemId);
         if (_unlockedItems.Contains(genItemid))
         {
+            Log.Debug($"Item Unlocked || {genItemid}");
             return 1;
         }
 
         return unlockAllItems ? (byte)1 : hooks[type].OriginalFunction(itemId);
     }
 
-    public void UnlockItem(int itemId) => _unlockedItems.Add(itemId);
+    public void UnlockItem(int itemId)
+    {
+        Log.Debug($"Registered Item Unlock: {itemId}");
+        _unlockedItems.Add(itemId);
+    }
 
     public void ConfigChanged(Config config) => this.unlockAllItems = config.UnlockAllItems;
 
