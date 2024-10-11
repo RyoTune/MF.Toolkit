@@ -158,7 +158,7 @@ param (
     $ReadmePath="",
     $Build=$True,
     $BuildR2R=$False,
-    $RemoveExe=$True,
+    $RemoveExe=$False,
     $UseScriptDirectory=$True,
 
     ## => User Config <= ## 
