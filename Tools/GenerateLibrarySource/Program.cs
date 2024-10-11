@@ -67,13 +67,13 @@ void GenerateFiles()
     File.WriteAllText(libraryFile, libText);
 }
 
-string GetSetter(FunctionDefiniton def) => $"        _{def.Name} = scans.CreateWrapper<{def.Name}>(Mod.NAME);";
+string GetSetter(FunctionDefiniton def) => $"\t\t_{def.Name} = scans.CreateWrapper<{def.Name}>(Mod.NAME);";
 
-string GetProperty(FunctionDefiniton def) => $"    public {def.Name} {def.Name} => _{def.Name}.Wrapper;";
+string GetProperty(FunctionDefiniton def) => $"\tpublic {def.Name} {def.Name} => _{def.Name}.Wrapper;";
 
-string GetField(FunctionDefiniton def) => $"    private readonly WrapperContainer<{def.Name}> _{def.Name};";
+string GetField(FunctionDefiniton def) => $"\tprivate readonly WrapperContainer<{def.Name}> _{def.Name};";
 
-string GetMethod(FunctionDefiniton def) => $"    public {def.Name} {def.Name} {{ get; }}";
+string GetMethod(FunctionDefiniton def) => $"\tpublic {def.Name} {def.Name} {{ get; }}";
 
 string GetDefinition(FunctionDefiniton def)
 {
@@ -96,10 +96,8 @@ string GetType(string type)
         "undefined4 *" => "int *",
         "undefined2 *" => "short *",
         "undefined *" or "char *" => "byte *",
-        "ulonglong" => "nuint",
-        "longlong" or "size_t" => "nint",
-        "longlong *" => "nint *",
-        "ulonglong *" => "nuint *",
+        "ulonglong" or "longlong" or "size_t" => "nint",
+        "longlong *" or "ulonglong *" => "nint *",
         "undefined * *" => "byte * *",
         _ => throw new Exception($"Unknown type: {type}")
     };
