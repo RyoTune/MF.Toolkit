@@ -62,12 +62,18 @@ internal class InventoryService : IUseConfig, IInventory
             return 1;
         }
 
+
+
+#if DEBUG
+        return unlockAllItems ? (byte)1 : hooks[type].OriginalFunction(itemId);
+#else
         if (type != ItemType.Outfits)
         {
             return unlockAllItems ? (byte)1 : hooks[type].OriginalFunction(itemId);
         }
 
         return hooks[type].OriginalFunction(itemId);
+#endif
     }
 
     public void UnlockItem(int itemId)
