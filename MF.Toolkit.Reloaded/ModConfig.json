@@ -57,14 +57,18 @@
           "ReleaseMetadataName": "CriFs.V2.Hook.ReleaseMetadata.json"
         }
       }
+    },
+    "GameBanana": {
+      "ItemType": "Mod",
+      "ItemId": 548487
     }
   },
   "IsUniversalMod": false,
   "ModDependencies": [
-    "reloaded.sharedlib.hooks",
+    "crifs.v2.hook",
     "Reloaded.Memory.SigScan.ReloadedII",
-    "SharedScans.Reloaded",
-    "crifs.v2.hook"
+    "reloaded.sharedlib.hooks",
+    "SharedScans.Reloaded"
   ],
   "OptionalDependencies": [],
   "SupportedAppId": [
