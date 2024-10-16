@@ -46,12 +46,12 @@ internal unsafe class MessageService : IMessage, IUseConfig
     private readonly Dictionary<int, string> itemNames = [];
     private readonly Dictionary<int, string> itemDescs = [];
     private readonly Dictionary<int, string> itemEffects = [];
-    private readonly MessageRegistry registry;
+    private readonly MessageRegistry _registry;
     private bool devMode;
 
     public MessageService(MessageRegistry registry)
     {
-        this.registry = registry;
+        _registry = registry;
         this.msgConfig1 = (MsgConfig1*)Marshal.AllocHGlobal(sizeof(MsgConfig1));
         this.msgConfig2 = (MsgConfig2*)Marshal.AllocHGlobal(sizeof(MsgConfig1));
         *this.msgConfig1 = new();
@@ -116,7 +116,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
         var gameMessages = new GameMessageList(msgSrc, msgSrcLength);
         this.msgTable[MsgUtils.ToLangAgnostic(msgPath)] = new(id - 1, gameMessages);
 
-        if (this.registry.TryGetModMessages(msgPath, out var messages))
+        if (this._registry.TryGetModMessages(msgPath, out var messages))
         {
             gameMessages.Merge(messages);
             var newMsgSrc = gameMessages.ToMemory();
@@ -280,7 +280,11 @@ internal unsafe class MessageService : IMessage, IUseConfig
 
     public void ConfigChanged(Config config) => this.devMode = config.DevMode;
 
-    public void EditMsg(string msgFilePath, IEnumerable<Message> msgs) { }
+    public void EditMsg(string msgPath, IEnumerable<Message> messages)
+    {
+        var lang = MsgUtils.GetMsgLanguage(msgPath);
+        _registry.RegisterMsg(lang, new Msg(msgPath, messages.Select(x => new SingleMessage(x)).ToArray()));
+    }
 
     public ILangItemMessages CreateItemMessages()
     {
@@ -294,9 +298,9 @@ internal unsafe class MessageService : IMessage, IUseConfig
             var descMsg = new Msg(MsgUtils.GetItemMsgPath(lang, ItemMsg.Description), new SingleMessage(desc));
             var effectMsg = new Msg(MsgUtils.GetItemMsgPath(lang, ItemMsg.Effect), new SingleMessage(effect));
 
-            registry.RegisterMsg(lang, itemMsg);
-            registry.RegisterMsg(lang, descMsg);
-            registry.RegisterMsg(lang, effectMsg);
+            _registry.RegisterMsg(lang, itemMsg);
+            _registry.RegisterMsg(lang, descMsg);
+            _registry.RegisterMsg(lang, effectMsg);
         }
 
         return itemMessages;
