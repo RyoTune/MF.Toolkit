@@ -17,6 +17,7 @@ internal class BitService : IUseConfig
 
     private readonly IMetaphorLibrary _metaLib;
     private readonly Dictionary<int, bool> _bitOverrides = [];
+    private readonly List<Action<GameDlc[]>> dlcChecks = [];
     private readonly Dictionary<int, GameDlc> _dlcBits = new()
     {
         [8918] = GameDlc.P1,
@@ -47,6 +48,8 @@ internal class BitService : IUseConfig
             (hooks, result) => _bitSetHook = hooks.CreateHook<BitSet>(BitSetImpl, result).Activate());
     }
 
+    internal void CheckDlc(Action<GameDlc[]> dlcResult) => dlcChecks.Add(dlcResult);
+
     public void SetBit(int bit, bool value)
     {
         _bitOverrides[bit] = value;
@@ -59,6 +62,11 @@ internal class BitService : IUseConfig
         if (_logBits == GameVarLogMode.SetOnly || _logBits == GameVarLogMode.Both)
         {
             Log.Information($"{nameof(BitSet)} || Bit: {bit} = {value}");
+        }
+
+        if (_dlcBits.TryGetValue(bit, out var dlc))
+        {
+            Log.Information($"DLC: {dlc} owned = {value}");
         }
     }
 
@@ -82,11 +90,11 @@ internal class BitService : IUseConfig
         {
             if (newValue)
             {
-                _metaLib.BitOn((uint)bit, 1);
+                _metaLib.BitOn(bit, 1);
             }
             else
             {
-                _metaLib.BitOff((uint)bit);
+                _metaLib.BitOff(bit);
             }
         }
 

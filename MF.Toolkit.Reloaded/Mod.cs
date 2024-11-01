@@ -93,7 +93,7 @@ public class Mod : ModBase, IExports
         _configurables.Add(_message);
         _modLoader.AddOrReplaceController<IMessage>(owner, _message);
 
-        _metaphorToolkit = new MetaphorToolkit(_modders, _metaphorLib);
+        _metaphorToolkit = new MetaphorToolkit(_modders, _metaphorLib, scans!);
         _configurables.Add(_metaphorToolkit);
         _modLoader.AddOrReplaceController<IMetaphorToolkit>(owner, _metaphorToolkit);
 

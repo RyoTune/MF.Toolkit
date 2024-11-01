@@ -27,7 +27,7 @@ public delegate nint collectgarbage(nint param1);
 public delegate nint resurrectunreachable(nint param1);
 public delegate void PrintLog(nint param1);
 public delegate void PrintLogSub(nint param1);
-public delegate byte AssertPrint();
+public delegate void AssertPrint(int param1, nint param2);
 public delegate int CMD_GET_AND(int param1, int param2);
 public delegate int CMD_GET_OR(int param1, int param2);
 public delegate int CMD_GET_XOR(int param1, int param2);

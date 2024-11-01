@@ -4,6 +4,7 @@ using MF.Toolkit.Interfaces.Metaphor.Models;
 using MF.Toolkit.Reloaded.Common;
 using MF.Toolkit.Reloaded.Configuration;
 using MF.Toolkit.Reloaded.Metaphor.Services;
+using SharedScans.Interfaces;
 
 namespace MF.Toolkit.Reloaded.Metaphor;
 
@@ -13,13 +14,15 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
     private readonly BitService _bits;
     private readonly CounterService _counters;
     private readonly CriFileService _files;
+    private readonly GameLogService _gameLog;
 
-    public MetaphorToolkit(IEnumerable<IRegisterMod> modders, IMetaphorLibrary metaLib)
+    public MetaphorToolkit(IEnumerable<IRegisterMod> modders, IMetaphorLibrary metaLib, ISharedScans scans)
     {
         _modders = modders;
         _bits = new BitService(metaLib);
         _counters = new CounterService(metaLib);
         _files = new();
+        _gameLog = new(scans);
     }
 
     public void AddFolder(string modId, string folderPath)
@@ -64,6 +67,7 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
     {
         _bits.ConfigChanged(config);
         _counters.ConfigChanged(config);
+        _gameLog.ConfigChanged(config);
     }
 
     public void RedirectFile(string ogPath, string newPath) => _files.RedirectFile(ogPath, newPath);
@@ -72,8 +76,5 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
 
     public void SetCounter(int counter, int value) => _counters.SetCounter(counter, value);
 
-    public void CheckOwnedDlc(Action<GameDlc[]> ownedDlc)
-    {
-        throw new NotImplementedException();
-    }
+    public void CheckDlc(Action<GameDlc[]> dlcResult) => _bits.CheckDlc(dlcResult);
 }
