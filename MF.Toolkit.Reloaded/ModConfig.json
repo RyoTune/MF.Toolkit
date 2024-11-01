@@ -2,7 +2,7 @@
   "ModId": "MF.Toolkit.Reloaded",
   "ModName": "Metaphor Modding Toolkit",
   "ModAuthor": "RyoTune",
-  "ModVersion": "1.0.1",
+  "ModVersion": "1.1.0",
   "ModDescription": "Library providing various utility functionality for use in mods.",
   "ModDll": "MF.Toolkit.Reloaded.dll",
   "ModIcon": "Preview.png",
