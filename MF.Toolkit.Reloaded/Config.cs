@@ -1,4 +1,5 @@
 ﻿using MF.Toolkit.Interfaces.Common;
+using MF.Toolkit.Reloaded.Metaphor.Models;
 using MF.Toolkit.Reloaded.Template.Configuration;
 using System.ComponentModel;
 
@@ -15,17 +16,35 @@ public class Config : Configurable<Config>
     [DefaultValue(Language.EN)]
     public Language SecondLanguage { get; set; } = Language.EN;
 
-    [DisplayName("Developer Mode")]
+    [DisplayName("Edit Game Data")]
+    [Description("Whether to apply edits to game variables (BITS, Counters, etc) to actual data.\nThis will make PERMANENT changes to game saves, enable with caution!")]
     [DefaultValue(false)]
-    public bool DevMode { get; set; }
+    public bool ShouldEditData { get; set; } = false;
+
+    [DisplayName("Developer Mode")]
+    [Category("Developer")]
+    [DefaultValue(false)]
+    public bool DevMode { get; set; } = false;
+
+    [DisplayName("Show Bits")]
+    [Category("Developer")]
+    [DefaultValue(GameVarLogMode.None)]
+    public GameVarLogMode ShowBits { get; set; } = GameVarLogMode.None;
+
+    [DisplayName("Show Counters")]
+    [Category("Developer")]
+    [DefaultValue(GameVarLogMode.None)]
+    public GameVarLogMode ShowCounters { get; set; } = GameVarLogMode.None;
 
     [DisplayName("Dump Functions")]
+    [Category("Developer")]
     [DefaultValue(false)]
-    public bool DumpFunctions { get; set; }
+    public bool DumpFunctions { get; set; } = false;
 
     [DisplayName("Unlock All Items")]
+    [Category("Developer")]
     [DefaultValue(false)]
-    public bool UnlockAllItems { get; set; }
+    public bool UnlockAllItems { get; set; } = false;
 }
 
 /// <summary>
