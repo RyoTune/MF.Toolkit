@@ -15,10 +15,22 @@ var methods = new List<string>();
 
 foreach (var def in defs)
 {
-    if (def.Name.Contains("print", StringComparison.OrdinalIgnoreCase)
+    if (def.Name == "print"
         || def.Name == "Random")
     {
         continue;
+    }
+
+    if (def.Name == "PrintLog" || def.Name == "PrintLogSub" || def.Name == "AssertPrint")
+    {
+        def.Ret = "void";
+        def.Args = ["nint"];
+    }
+
+    if (def.Name == "AssertPrint")
+    {
+        def.Ret = "void";
+        def.Args = ["int", "nint"];
     }
 
     var definition = GetDefinition(def);
@@ -86,13 +98,15 @@ string GetDefinition(FunctionDefiniton def)
 string GetType(string type)
     => type switch
     {
-        "int" or "uint" or "void" or "bool" or "byte" or "short" or "SQVM *" or "void * *" or "int *"
-        or "ushort" or "void *" or "uint *" => type,
+        "int" or "void" or "bool" or "byte" or "short" or "SQVM *" or "void * *" or "int *"
+        or "ushort" or "void *" or "nint" => type,
+        "uint" => "int",
+        "uint *" => "int *",
         "undefined8" => "nint",
         "undefined4" => "int",
         "undefined2" => "short",
         "undefined" or "char" or "undefined1" => "byte",
-        "undefined8 *" => "nint*",
+        "undefined8 *" => "nint *",
         "undefined4 *" => "int *",
         "undefined2 *" => "short *",
         "undefined *" or "char *" => "byte *",

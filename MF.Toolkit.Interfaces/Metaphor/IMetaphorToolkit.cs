@@ -43,5 +43,5 @@ public interface IMetaphorToolkit
     /// Get list of user's owned DLC, once that data is available.
     /// </summary>
     /// <param name="ownedDlc">User's owned DLC.</param>
-    void CheckOwnedDlc(Action<GameDlc[]> ownedDlc);
+    void CheckDlc(Action<GameDlc[]> ownedDlc);
 }

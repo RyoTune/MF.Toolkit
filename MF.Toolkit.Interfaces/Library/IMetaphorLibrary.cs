@@ -25,6 +25,9 @@ public interface IMetaphorLibrary
 	public dummy dummy { get; }
 	public collectgarbage collectgarbage { get; }
 	public resurrectunreachable resurrectunreachable { get; }
+	public PrintLog PrintLog { get; }
+	public PrintLogSub PrintLogSub { get; }
+	public AssertPrint AssertPrint { get; }
 	public CMD_GET_AND CMD_GET_AND { get; }
 	public CMD_GET_OR CMD_GET_OR { get; }
 	public CMD_GET_XOR CMD_GET_XOR { get; }
@@ -165,6 +168,8 @@ public interface IMetaphorLibrary
 	public SetCalendarRegion SetCalendarRegion { get; }
 	public GetWwbgID GetWwbgID { get; }
 	public SetWwbgID SetWwbgID { get; }
+	public Demo_StartEndMovie Demo_StartEndMovie { get; }
+	public Demo_IsCoveredEndMovie Demo_IsCoveredEndMovie { get; }
 	public MsgOpen MsgOpen { get; }
 	public MsgGetHandleID MsgGetHandleID { get; }
 	public MsgCheckOpened MsgCheckOpened { get; }
@@ -175,6 +180,9 @@ public interface IMetaphorLibrary
 	public MsgRequestIDAuto MsgRequestIDAuto { get; }
 	public MsgRequestSystemMessage MsgRequestSystemMessage { get; }
 	public MsgRequestSystemMessageID MsgRequestSystemMessageID { get; }
+	public DemoSystemMessageUIStart DemoSystemMessageUIStart { get; }
+	public DemoSystemMessageUIIsClosed DemoSystemMessageUIIsClosed { get; }
+	public DemoSystemMessageUIEnd DemoSystemMessageUIEnd { get; }
 	public MsgRequestSubtitles MsgRequestSubtitles { get; }
 	public MsgRequestSubtitlesAuto MsgRequestSubtitlesAuto { get; }
 	public MsgRequestNarration MsgRequestNarration { get; }
@@ -1452,6 +1460,8 @@ public interface IMetaphorLibrary
 	public FldMaskBoxSetOnByGroupID FldMaskBoxSetOnByGroupID { get; }
 	public FldMaskBoxSetIsUpdate FldMaskBoxSetIsUpdate { get; }
 	public FldMaskBoxSetOnByLine FldMaskBoxSetOnByLine { get; }
+	public FldFootPrintSetIsPause FldFootPrintSetIsPause { get; }
+	public FldFootPrintReset FldFootPrintReset { get; }
 	public FldSaveEntryEnemyCheckScript_Register FldSaveEntryEnemyCheckScript_Register { get; }
 	public FldSaveEntryEnemyCheckScript_Unregister FldSaveEntryEnemyCheckScript_Unregister { get; }
 	public FldSaveEntryEnemyCheckScript_IsRegister FldSaveEntryEnemyCheckScript_IsRegister { get; }

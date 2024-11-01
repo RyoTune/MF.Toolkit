@@ -26,6 +26,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	private readonly WrapperContainer<dummy> _dummy;
 	private readonly WrapperContainer<collectgarbage> _collectgarbage;
 	private readonly WrapperContainer<resurrectunreachable> _resurrectunreachable;
+	private readonly WrapperContainer<PrintLog> _PrintLog;
+	private readonly WrapperContainer<PrintLogSub> _PrintLogSub;
+	private readonly WrapperContainer<AssertPrint> _AssertPrint;
 	private readonly WrapperContainer<CMD_GET_AND> _CMD_GET_AND;
 	private readonly WrapperContainer<CMD_GET_OR> _CMD_GET_OR;
 	private readonly WrapperContainer<CMD_GET_XOR> _CMD_GET_XOR;
@@ -166,6 +169,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	private readonly WrapperContainer<SetCalendarRegion> _SetCalendarRegion;
 	private readonly WrapperContainer<GetWwbgID> _GetWwbgID;
 	private readonly WrapperContainer<SetWwbgID> _SetWwbgID;
+	private readonly WrapperContainer<Demo_StartEndMovie> _Demo_StartEndMovie;
+	private readonly WrapperContainer<Demo_IsCoveredEndMovie> _Demo_IsCoveredEndMovie;
 	private readonly WrapperContainer<MsgOpen> _MsgOpen;
 	private readonly WrapperContainer<MsgGetHandleID> _MsgGetHandleID;
 	private readonly WrapperContainer<MsgCheckOpened> _MsgCheckOpened;
@@ -176,6 +181,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	private readonly WrapperContainer<MsgRequestIDAuto> _MsgRequestIDAuto;
 	private readonly WrapperContainer<MsgRequestSystemMessage> _MsgRequestSystemMessage;
 	private readonly WrapperContainer<MsgRequestSystemMessageID> _MsgRequestSystemMessageID;
+	private readonly WrapperContainer<DemoSystemMessageUIStart> _DemoSystemMessageUIStart;
+	private readonly WrapperContainer<DemoSystemMessageUIIsClosed> _DemoSystemMessageUIIsClosed;
+	private readonly WrapperContainer<DemoSystemMessageUIEnd> _DemoSystemMessageUIEnd;
 	private readonly WrapperContainer<MsgRequestSubtitles> _MsgRequestSubtitles;
 	private readonly WrapperContainer<MsgRequestSubtitlesAuto> _MsgRequestSubtitlesAuto;
 	private readonly WrapperContainer<MsgRequestNarration> _MsgRequestNarration;
@@ -1453,6 +1461,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	private readonly WrapperContainer<FldMaskBoxSetOnByGroupID> _FldMaskBoxSetOnByGroupID;
 	private readonly WrapperContainer<FldMaskBoxSetIsUpdate> _FldMaskBoxSetIsUpdate;
 	private readonly WrapperContainer<FldMaskBoxSetOnByLine> _FldMaskBoxSetOnByLine;
+	private readonly WrapperContainer<FldFootPrintSetIsPause> _FldFootPrintSetIsPause;
+	private readonly WrapperContainer<FldFootPrintReset> _FldFootPrintReset;
 	private readonly WrapperContainer<FldSaveEntryEnemyCheckScript_Register> _FldSaveEntryEnemyCheckScript_Register;
 	private readonly WrapperContainer<FldSaveEntryEnemyCheckScript_Unregister> _FldSaveEntryEnemyCheckScript_Unregister;
 	private readonly WrapperContainer<FldSaveEntryEnemyCheckScript_IsRegister> _FldSaveEntryEnemyCheckScript_IsRegister;
@@ -1536,6 +1546,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 		_dummy = scans.CreateWrapper<dummy>(Mod.NAME);
 		_collectgarbage = scans.CreateWrapper<collectgarbage>(Mod.NAME);
 		_resurrectunreachable = scans.CreateWrapper<resurrectunreachable>(Mod.NAME);
+		_PrintLog = scans.CreateWrapper<PrintLog>(Mod.NAME);
+		_PrintLogSub = scans.CreateWrapper<PrintLogSub>(Mod.NAME);
+		_AssertPrint = scans.CreateWrapper<AssertPrint>(Mod.NAME);
 		_CMD_GET_AND = scans.CreateWrapper<CMD_GET_AND>(Mod.NAME);
 		_CMD_GET_OR = scans.CreateWrapper<CMD_GET_OR>(Mod.NAME);
 		_CMD_GET_XOR = scans.CreateWrapper<CMD_GET_XOR>(Mod.NAME);
@@ -1676,6 +1689,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 		_SetCalendarRegion = scans.CreateWrapper<SetCalendarRegion>(Mod.NAME);
 		_GetWwbgID = scans.CreateWrapper<GetWwbgID>(Mod.NAME);
 		_SetWwbgID = scans.CreateWrapper<SetWwbgID>(Mod.NAME);
+		_Demo_StartEndMovie = scans.CreateWrapper<Demo_StartEndMovie>(Mod.NAME);
+		_Demo_IsCoveredEndMovie = scans.CreateWrapper<Demo_IsCoveredEndMovie>(Mod.NAME);
 		_MsgOpen = scans.CreateWrapper<MsgOpen>(Mod.NAME);
 		_MsgGetHandleID = scans.CreateWrapper<MsgGetHandleID>(Mod.NAME);
 		_MsgCheckOpened = scans.CreateWrapper<MsgCheckOpened>(Mod.NAME);
@@ -1686,6 +1701,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 		_MsgRequestIDAuto = scans.CreateWrapper<MsgRequestIDAuto>(Mod.NAME);
 		_MsgRequestSystemMessage = scans.CreateWrapper<MsgRequestSystemMessage>(Mod.NAME);
 		_MsgRequestSystemMessageID = scans.CreateWrapper<MsgRequestSystemMessageID>(Mod.NAME);
+		_DemoSystemMessageUIStart = scans.CreateWrapper<DemoSystemMessageUIStart>(Mod.NAME);
+		_DemoSystemMessageUIIsClosed = scans.CreateWrapper<DemoSystemMessageUIIsClosed>(Mod.NAME);
+		_DemoSystemMessageUIEnd = scans.CreateWrapper<DemoSystemMessageUIEnd>(Mod.NAME);
 		_MsgRequestSubtitles = scans.CreateWrapper<MsgRequestSubtitles>(Mod.NAME);
 		_MsgRequestSubtitlesAuto = scans.CreateWrapper<MsgRequestSubtitlesAuto>(Mod.NAME);
 		_MsgRequestNarration = scans.CreateWrapper<MsgRequestNarration>(Mod.NAME);
@@ -2963,6 +2981,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 		_FldMaskBoxSetOnByGroupID = scans.CreateWrapper<FldMaskBoxSetOnByGroupID>(Mod.NAME);
 		_FldMaskBoxSetIsUpdate = scans.CreateWrapper<FldMaskBoxSetIsUpdate>(Mod.NAME);
 		_FldMaskBoxSetOnByLine = scans.CreateWrapper<FldMaskBoxSetOnByLine>(Mod.NAME);
+		_FldFootPrintSetIsPause = scans.CreateWrapper<FldFootPrintSetIsPause>(Mod.NAME);
+		_FldFootPrintReset = scans.CreateWrapper<FldFootPrintReset>(Mod.NAME);
 		_FldSaveEntryEnemyCheckScript_Register = scans.CreateWrapper<FldSaveEntryEnemyCheckScript_Register>(Mod.NAME);
 		_FldSaveEntryEnemyCheckScript_Unregister = scans.CreateWrapper<FldSaveEntryEnemyCheckScript_Unregister>(Mod.NAME);
 		_FldSaveEntryEnemyCheckScript_IsRegister = scans.CreateWrapper<FldSaveEntryEnemyCheckScript_IsRegister>(Mod.NAME);
@@ -3045,6 +3065,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	public dummy dummy => _dummy.Wrapper;
 	public collectgarbage collectgarbage => _collectgarbage.Wrapper;
 	public resurrectunreachable resurrectunreachable => _resurrectunreachable.Wrapper;
+	public PrintLog PrintLog => _PrintLog.Wrapper;
+	public PrintLogSub PrintLogSub => _PrintLogSub.Wrapper;
+	public AssertPrint AssertPrint => _AssertPrint.Wrapper;
 	public CMD_GET_AND CMD_GET_AND => _CMD_GET_AND.Wrapper;
 	public CMD_GET_OR CMD_GET_OR => _CMD_GET_OR.Wrapper;
 	public CMD_GET_XOR CMD_GET_XOR => _CMD_GET_XOR.Wrapper;
@@ -3185,6 +3208,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	public SetCalendarRegion SetCalendarRegion => _SetCalendarRegion.Wrapper;
 	public GetWwbgID GetWwbgID => _GetWwbgID.Wrapper;
 	public SetWwbgID SetWwbgID => _SetWwbgID.Wrapper;
+	public Demo_StartEndMovie Demo_StartEndMovie => _Demo_StartEndMovie.Wrapper;
+	public Demo_IsCoveredEndMovie Demo_IsCoveredEndMovie => _Demo_IsCoveredEndMovie.Wrapper;
 	public MsgOpen MsgOpen => _MsgOpen.Wrapper;
 	public MsgGetHandleID MsgGetHandleID => _MsgGetHandleID.Wrapper;
 	public MsgCheckOpened MsgCheckOpened => _MsgCheckOpened.Wrapper;
@@ -3195,6 +3220,9 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	public MsgRequestIDAuto MsgRequestIDAuto => _MsgRequestIDAuto.Wrapper;
 	public MsgRequestSystemMessage MsgRequestSystemMessage => _MsgRequestSystemMessage.Wrapper;
 	public MsgRequestSystemMessageID MsgRequestSystemMessageID => _MsgRequestSystemMessageID.Wrapper;
+	public DemoSystemMessageUIStart DemoSystemMessageUIStart => _DemoSystemMessageUIStart.Wrapper;
+	public DemoSystemMessageUIIsClosed DemoSystemMessageUIIsClosed => _DemoSystemMessageUIIsClosed.Wrapper;
+	public DemoSystemMessageUIEnd DemoSystemMessageUIEnd => _DemoSystemMessageUIEnd.Wrapper;
 	public MsgRequestSubtitles MsgRequestSubtitles => _MsgRequestSubtitles.Wrapper;
 	public MsgRequestSubtitlesAuto MsgRequestSubtitlesAuto => _MsgRequestSubtitlesAuto.Wrapper;
 	public MsgRequestNarration MsgRequestNarration => _MsgRequestNarration.Wrapper;
@@ -4472,6 +4500,8 @@ internal class MetaphorLibrary : IMetaphorLibrary
 	public FldMaskBoxSetOnByGroupID FldMaskBoxSetOnByGroupID => _FldMaskBoxSetOnByGroupID.Wrapper;
 	public FldMaskBoxSetIsUpdate FldMaskBoxSetIsUpdate => _FldMaskBoxSetIsUpdate.Wrapper;
 	public FldMaskBoxSetOnByLine FldMaskBoxSetOnByLine => _FldMaskBoxSetOnByLine.Wrapper;
+	public FldFootPrintSetIsPause FldFootPrintSetIsPause => _FldFootPrintSetIsPause.Wrapper;
+	public FldFootPrintReset FldFootPrintReset => _FldFootPrintReset.Wrapper;
 	public FldSaveEntryEnemyCheckScript_Register FldSaveEntryEnemyCheckScript_Register => _FldSaveEntryEnemyCheckScript_Register.Wrapper;
 	public FldSaveEntryEnemyCheckScript_Unregister FldSaveEntryEnemyCheckScript_Unregister => _FldSaveEntryEnemyCheckScript_Unregister.Wrapper;
 	public FldSaveEntryEnemyCheckScript_IsRegister FldSaveEntryEnemyCheckScript_IsRegister => _FldSaveEntryEnemyCheckScript_IsRegister.Wrapper;
