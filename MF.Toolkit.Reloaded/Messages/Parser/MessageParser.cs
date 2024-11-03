@@ -21,7 +21,8 @@ public class MessageParser
     private static readonly TokenListParser<MessageToken, string> Content =
         from content in Token.EqualTo(MessageToken.Text).Or(Token.EqualTo(MessageToken.AtSymbol)).Many()
         .Between(Token.EqualTo(MessageToken.CurlyOpen), Token.EqualTo(MessageToken.CurlyClose))
-        select string.Join('\n', content.Select(x => x.ToStringValue()));
+        select string.Join('\n', content.Select(x => x.ToStringValue()))
+        is var result && result == "<WAIT>" ? " \n<WAIT>" : result;
 
     private static readonly TokenListParser<MessageToken, string> Label =
         from _ in Token.EqualTo(MessageToken.AtSymbol)

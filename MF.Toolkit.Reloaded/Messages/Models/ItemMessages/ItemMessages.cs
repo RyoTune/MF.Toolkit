@@ -15,11 +15,11 @@ internal class ItemMessages : IItemMessages
         effect.Label = label;
     }
 
-    public void SetName(string name) => this.name.Content = MsgUtils.WithWait(name);
+    public void SetName(string name) => this.name.Content = name;
 
-    public void SetDescription(string description) => desc.Content = MsgUtils.WithWait(description);
+    public void SetDescription(string description) => desc.Content = description;
 
-    public void SetEffect(string effect) => this.effect.Content = MsgUtils.WithWait(effect);
+    public void SetEffect(string effect) => this.effect.Content = effect;
 
     public (Message Name, Message Description, Message Effect) GetMessages() => (name, desc, effect);
 }

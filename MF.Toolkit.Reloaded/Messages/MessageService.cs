@@ -142,22 +142,6 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
     }
 
-    public string CreateItemMessage(ItemMsg type, string message)
-    {
-        if (!message.EndsWith("<WAIT>"))
-        {
-            message = $"{message}\n<WAIT>";
-        }
-
-        var msg = new Message()
-        {
-            Label = Guid.NewGuid().ToString(),
-            Content = message,
-        };
-
-        return msg.Label;
-    }
-
     public void SetItemMessage(int itemId, ItemMsg type, string label)
     {
         switch (type)

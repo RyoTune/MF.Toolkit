@@ -40,14 +40,4 @@ internal static class MsgUtils
 
     public static Language GetMsgLanguage(string msgPath)
         => Enum.GetValues<Language>().FirstOrDefault(x => msgPath.StartsWith(x.ToCode(), StringComparison.OrdinalIgnoreCase));
-
-    public static string WithWait(string message)
-    {
-        if (!message.Contains("<WAIT>"))
-        {
-            return $"{message}\n<WAIT>";
-        }
-
-        return message;
-    }
 }
