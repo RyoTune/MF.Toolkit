@@ -44,4 +44,13 @@ public interface IMetaphorToolkit
     /// </summary>
     /// <param name="ownedDlc">User's owned DLC.</param>
     void CheckDlc(Action<GameDlc[]> ownedDlc);
+
+    /// <summary>
+    /// Replace a sprite sequence.
+    /// A sequence can be disabled by setting <paramref name="newSeqSprite"/> and <paramref name="newSeq"/> to <c>"NONE"</c>.
+    /// </summary>
+    /// <param name="ogSeq">Original sprite sequence.</param>
+    /// <param name="newSeqSprite">Source sprite of new sequence.</param>
+    /// <param name="newSeq">New sprite sequence.</param>
+    public void ReplaceSpriteSeq(string ogSeq, string newSeqSprite, string newSeq);
 }

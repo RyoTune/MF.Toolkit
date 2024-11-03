@@ -36,10 +36,11 @@ public class Config : Configurable<Config>
     [DefaultValue(GameVarLogMode.None)]
     public GameVarLogMode ShowCounters { get; set; } = GameVarLogMode.None;
 
-    [DisplayName("Dump Functions")]
+    [DisplayName("Dump Data")]
+    [Description("Whether to dump useful game data to file.\nIncludes things such as functions, sprite info, etc.")]
     [Category("Developer")]
     [DefaultValue(false)]
-    public bool DumpFunctions { get; set; } = false;
+    public bool DumpData { get; set; } = false;
 
     [DisplayName("Unlock All Items")]
     [Category("Developer")]

@@ -112,7 +112,7 @@ internal unsafe class SquirrelService : ISquirrel, IUseConfig
     public void ConfigChanged(Config config)
     {
         this.devMode = config.DevMode;
-        this.dumpFunctions = config.DumpFunctions;
+        this.dumpFunctions = config.DumpData;
         this.timer.Restart();
     }
 

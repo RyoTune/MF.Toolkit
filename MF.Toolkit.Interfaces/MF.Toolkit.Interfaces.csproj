@@ -4,12 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-	<Version>1.1.0</Version>
-	<Authors>RyoTune</Authors>
-	<Description>Library providing various utility functionality for use in mods.</Description>
-	<RepositoryUrl>https://github.com/RyoTune/MF.Toolkit</RepositoryUrl>
+	  <Version>1.2.0</Version>
+	  <Authors>RyoTune</Authors>
+	  <Description>Library providing various utility functionality for use in mods.</Description>
+	  <RepositoryUrl>https://github.com/RyoTune/MF.Toolkit</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

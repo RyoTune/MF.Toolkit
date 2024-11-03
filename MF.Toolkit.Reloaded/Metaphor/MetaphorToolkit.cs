@@ -15,14 +15,16 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
     private readonly CounterService _counters;
     private readonly CriFileService _files;
     private readonly GameLogService _gameLog;
+    private readonly SpriteService _sprites;
 
-    public MetaphorToolkit(IEnumerable<IRegisterMod> modders, IMetaphorLibrary metaLib, ISharedScans scans)
+    public MetaphorToolkit(string modDir, IEnumerable<IRegisterMod> modders, IMetaphorLibrary metaLib, ISharedScans scans)
     {
         _modders = modders;
         _bits = new BitService(metaLib);
         _counters = new CounterService(metaLib);
         _files = new();
         _gameLog = new(scans);
+        _sprites = new(modDir);
     }
 
     public void AddFolder(string modId, string folderPath)
@@ -61,6 +63,17 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
                 _files.RedirectFile(kv.Key, kv.Value);
             }
         }
+
+        var spritesFile = Path.Join(folderPath, "sprites.mfv");
+        if (File.Exists(spritesFile))
+        {
+            var sprites = MetaVarSerializer.DeserializeFile<string, string>(spritesFile);
+            foreach (var kv in sprites)
+            {
+                var newSeqParts = kv.Value.Split("|", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                _sprites.ReplaceSpriteSeq(kv.Key, newSeqParts[0], newSeqParts[1]);
+            }
+        }
     }
 
     public void ConfigChanged(Config config)
@@ -68,9 +81,12 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
         _bits.ConfigChanged(config);
         _counters.ConfigChanged(config);
         _gameLog.ConfigChanged(config);
+        _sprites.ConfigChanged(config);
     }
 
     public void RedirectFile(string ogPath, string newPath) => _files.RedirectFile(ogPath, newPath);
+
+    public void ReplaceSpriteSeq(string ogSeq, string newSeqSprite, string newSeq) => _sprites.ReplaceSpriteSeq(ogSeq, newSeqSprite, newSeq);
 
     public void SetBit(int bit, bool value) => _bits.SetBit(bit, value);
 
