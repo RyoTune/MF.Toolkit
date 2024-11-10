@@ -20,8 +20,8 @@ internal class MetaphorToolkit : IMetaphorToolkit, IUseConfig
     public MetaphorToolkit(string modDir, IEnumerable<IRegisterMod> modders, IMetaphorLibrary metaLib, ISharedScans scans)
     {
         _modders = modders;
-        _bits = new BitService(metaLib);
-        _counters = new CounterService(metaLib);
+        _bits = new(metaLib);
+        _counters = new(metaLib);
         _files = new();
         _gameLog = new(scans);
         _sprites = new(modDir);

@@ -40,12 +40,12 @@ internal class BitService : IUseConfig
         ScanHooks.Add(
             nameof(BitGet),
             "8B C1 99 83 E2 1F 03 C2 8B C8 83 E0 1F 2B C2",
-            (hooks, result) => _bitGetHook = hooks.CreateHook<BitGet>(BitGetImpl, result).Activate());
+            (hooks, result) => _bitGetHook = hooks.CreateHook<BitGet>(BitGetImpl, result));
 
         ScanHooks.Add(
             nameof(BitSet),
             "40 53 48 83 EC 20 44 0F B6 CA",
-            (hooks, result) => _bitSetHook = hooks.CreateHook<BitSet>(BitSetImpl, result).Activate());
+            (hooks, result) => _bitSetHook = hooks.CreateHook<BitSet>(BitSetImpl, result));
     }
 
     internal void CheckDlc(Action<GameDlc[]> dlcResult) => dlcChecks.Add(dlcResult);

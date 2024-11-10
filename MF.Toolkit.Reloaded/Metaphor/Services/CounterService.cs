@@ -26,12 +26,12 @@ internal class CounterService : IUseConfig
         ScanHooks.Add(
             nameof(CounterGet),
             "48 8B 05 ?? ?? ?? ?? 48 63 D1 8B 84 ?? f4 33 02 00",
-            (hooks, result) => _counterGetHook = hooks.CreateHook<CounterGet>(CounterGetImpl, result).Activate());
+            (hooks, result) => _counterGetHook = hooks.CreateHook<CounterGet>(CounterGetImpl, result));
 
         ScanHooks.Add(
             nameof(CounterSet),
             "48 8B 05 ?? ?? ?? ?? 4C 63 C1 42 89 94 ?? F4 33 02 00",
-            (hooks, result) => _counterSetHook = hooks.CreateHook<CounterSet>(CounterSetImpl, result).Activate());
+            (hooks, result) => _counterSetHook = hooks.CreateHook<CounterSet>(CounterSetImpl, result));
     }
 
     public void SetCounter(int counter, int value) => _counterOverrides[counter] = value;
