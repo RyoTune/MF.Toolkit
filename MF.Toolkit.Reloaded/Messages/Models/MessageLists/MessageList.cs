@@ -1,5 +1,5 @@
 ﻿using MF.Toolkit.Interfaces.Messages.Models;
-using System.Runtime.InteropServices;
+using MF.Toolkit.Reloaded.Common;
 
 namespace MF.Toolkit.Reloaded.Messages.Models.MessageLists;
 
@@ -32,6 +32,6 @@ public class MessageList : List<Message>
     public (nint Pointer, int Length) ToMemory()
     {
         var str = string.Join('\n', this.Select(x => x.ToString()));
-        return (Marshal.StringToHGlobalAnsi(str), str.Length);
+        return (MarshalEx.StringToHGlobalUni8(str), str.Length);
     }
 }
