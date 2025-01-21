@@ -113,33 +113,42 @@ internal unsafe class MessageService : IMessage, IUseConfig
     private uint CompileMsgFileImpl(nint msgSrc, int msgSrcLength, nint msgFile, int id, byte param5)
     {
         var msgPath = Marshal.PtrToStringAnsi(msgFile)!;
-        var gameMessages = new GameMessageList(msgSrc, msgSrcLength);
-        this.msgTable[MsgUtils.ToLangAgnostic(msgPath)] = new(id - 1, gameMessages);
 
-        if (this._registry.TryGetModMessages(msgPath, out var messages))
+        try
         {
-            gameMessages.Merge(messages);
-            var newMsgSrc = gameMessages.ToMemory();
+            var gameMessages = new GameMessageList(msgSrc, msgSrcLength);
+            this.msgTable[MsgUtils.ToLangAgnostic(msgPath)] = new(id - 1, gameMessages);
+
+            if (this._registry.TryGetModMessages(msgPath, out var messages))
+            {
+                gameMessages.Merge(messages);
+                var newMsgSrc = gameMessages.ToMemory();
+                if (this.devMode)
+                {
+                    Log.Information($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
+                }
+                else
+                {
+                    Log.Debug($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
+                }
+
+                var result = this.compileMsgFileHook!.OriginalFunction(newMsgSrc.Pointer, newMsgSrc.Length, msgFile, id, param5);
+                Marshal.FreeHGlobal(newMsgSrc.Pointer); // Hopefully doesn't cause a crash lol.
+                return result;
+            }
+
             if (this.devMode)
             {
-                Log.Information($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
-            }
-            else
-            {
-                Log.Debug($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
+                Log.Information($"MSG: {msgPath} || ID: {id} || Param5: {param5}");
             }
 
-            var result = this.compileMsgFileHook!.OriginalFunction(newMsgSrc.Pointer, newMsgSrc.Length, msgFile, id, param5);
-            Marshal.FreeHGlobal(newMsgSrc.Pointer); // Hopefully doesn't cause a crash lol.
-            return result;
+            return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
         }
-
-        if (this.devMode)
+        catch (Exception ex)
         {
-            Log.Information($"MSG: {msgPath} || ID: {id} || Param5: {param5}");
+            Log.Error(ex, $"Failed to process MSG: {msgPath}");
+            return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
         }
-
-        return this.compileMsgFileHook!.OriginalFunction(msgSrc, msgSrcLength, msgFile, id, param5);
     }
 
     public void SetItemMessage(int itemId, ItemMsg type, string label)

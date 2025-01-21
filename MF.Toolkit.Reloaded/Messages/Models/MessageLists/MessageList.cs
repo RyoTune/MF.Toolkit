@@ -1,5 +1,6 @@
 ﻿using MF.Toolkit.Interfaces.Messages.Models;
-using MF.Toolkit.Reloaded.Common;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MF.Toolkit.Reloaded.Messages.Models.MessageLists;
 
@@ -32,6 +33,9 @@ public class MessageList : List<Message>
     public (nint Pointer, int Length) ToMemory()
     {
         var str = string.Join('\n', this.Select(x => x.ToString()));
-        return (MarshalEx.StringToHGlobalUni8(str), str.Length);
+        var bytes = Encoding.UTF8.GetBytes(str);
+        var ptr = Marshal.AllocHGlobal(bytes.Length);
+        Marshal.Copy(bytes, 0, ptr, bytes.Length);
+        return (ptr, bytes.Length);
     }
 }

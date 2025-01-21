@@ -7,7 +7,7 @@ internal class GameMessageList : MessageList
 {
     public GameMessageList(nint src, int srcLength)
     {
-        Merge(MessageParser.Parse(Marshal.PtrToStringAnsi(src, srcLength)!));
+        Merge(MessageParser.Parse(Marshal.PtrToStringUTF8(src, srcLength)!));
     }
 
     public int GetLabelId(string label) => FindIndex(x => x.Label == label);
