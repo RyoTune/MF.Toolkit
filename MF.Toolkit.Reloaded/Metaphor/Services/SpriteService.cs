@@ -24,6 +24,7 @@ internal unsafe class SpriteService : IUseConfig
     private readonly string _modDir;
     private readonly Dictionary<string, List<string>> _sequences = [];
     private bool _isDevMode;
+    private bool _showSprites;
     private bool _shouldDump;
     private bool _hasDump;
 
@@ -90,11 +91,6 @@ internal unsafe class SpriteService : IUseConfig
         var ogSpr = Marshal.PtrToStringAnsi(spriteStr)!;
         var ogSeq = Marshal.PtrToStringAnsi(seqStr)!;
 
-        if (_isDevMode)
-        {
-            Log.Information($"Playing Sprite: {ogSpr} || {ogSeq}");
-        }
-
         if (_shouldDump && !_hasDump)
         {
             JsonFileSerializer.Serialize(Path.Join(_modDir, "dump", "sprites.json"), _sequences);
@@ -120,6 +116,10 @@ internal unsafe class SpriteService : IUseConfig
             return;
         }
 
+        if (_isDevMode && _showSprites)
+        {
+            Log.Information($"Playing Sprite: {ogSpr} || {ogSeq}");
+        }
 
         _playSprSeq!.OriginalFunction(param1, spriteStr, seqStr, param4, param5, param6, param7);
     }
@@ -127,6 +127,7 @@ internal unsafe class SpriteService : IUseConfig
     public void ConfigChanged(Config config)
     {
         _isDevMode = config.DevMode;
+        _showSprites = config.ShowSprites;
         _shouldDump = config.DumpData;
     }
 }

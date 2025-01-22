@@ -47,7 +47,8 @@ internal unsafe class MessageService : IMessage, IUseConfig
     private readonly Dictionary<int, string> itemDescs = [];
     private readonly Dictionary<int, string> itemEffects = [];
     private readonly MessageRegistry _registry;
-    private bool devMode;
+    private bool _devMode;
+    private bool _showMsgs;
 
     public MessageService(MessageRegistry registry)
     {
@@ -123,7 +124,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
             {
                 gameMessages.Merge(messages);
                 var newMsgSrc = gameMessages.ToMemory();
-                if (this.devMode)
+                if (this._devMode)
                 {
                     Log.Information($"Merged MSG: {msgPath} || ID: {id} || Param5: {param5}");
                 }
@@ -137,7 +138,7 @@ internal unsafe class MessageService : IMessage, IUseConfig
                 return result;
             }
 
-            if (this.devMode)
+            if (_devMode && _showMsgs)
             {
                 Log.Information($"MSG: {msgPath} || ID: {id} || Param5: {param5}");
             }
@@ -271,7 +272,11 @@ internal unsafe class MessageService : IMessage, IUseConfig
         return msg;
     }
 
-    public void ConfigChanged(Config config) => this.devMode = config.DevMode;
+    public void ConfigChanged(Config config)
+    {
+        _devMode = config.DevMode;
+        _showMsgs = config.ShowMsgs;
+    }
 
     public void EditMsg(string msgPath, IEnumerable<Message> messages)
     {

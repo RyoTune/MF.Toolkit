@@ -9,6 +9,7 @@ namespace MF.Toolkit.Reloaded.Metaphor.Services;
 internal class GameLogService : IUseConfig
 {
     private bool _isDevMode;
+    private bool _showGameLogs;
 
     public GameLogService(ISharedScans scans)
     {
@@ -19,7 +20,7 @@ internal class GameLogService : IUseConfig
 
     private void AssertPrintImpl(int param1, nint param2)
     {
-        if (_isDevMode)
+        if (_isDevMode && _showGameLogs)
         {
             Log.Information($"AssertPrint: {Marshal.PtrToStringAnsi(param2)} || {param1}");
         }
@@ -27,13 +28,17 @@ internal class GameLogService : IUseConfig
 
     private void Print(nint param1, LogType type)
     {
-        if (_isDevMode)
+        if (_isDevMode && _showGameLogs)
         {
             Log.Information($"{type}: {Marshal.PtrToStringAnsi(param1)}");
         }
     }
 
-    public void ConfigChanged(Config config) => _isDevMode = config.DevMode;
+    public void ConfigChanged(Config config)
+    {
+        _isDevMode = config.DevMode;
+        _showGameLogs = config.ShowGameLogs;
+    }
 
     private enum LogType
     {

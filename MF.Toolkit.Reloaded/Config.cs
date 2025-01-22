@@ -26,15 +26,30 @@ public class Config : Configurable<Config>
     [DefaultValue(false)]
     public bool DevMode { get; set; } = false;
 
+    [DisplayName("Show Game Logs")]
+    [Category("Developer: Logging")]
+    [DefaultValue(GameVarLogMode.None)]
+    public bool ShowGameLogs { get; set; } = false;
+
     [DisplayName("Show Bits")]
-    [Category("Developer")]
+    [Category("Developer: Logging")]
     [DefaultValue(GameVarLogMode.None)]
     public GameVarLogMode ShowBits { get; set; } = GameVarLogMode.None;
 
     [DisplayName("Show Counters")]
-    [Category("Developer")]
+    [Category("Developer: Logging")]
     [DefaultValue(GameVarLogMode.None)]
     public GameVarLogMode ShowCounters { get; set; } = GameVarLogMode.None;
+
+    [DisplayName("Show Sprites")]
+    [Category("Developer: Logging")]
+    [DefaultValue(false)]
+    public bool ShowSprites { get; set; } = false;
+
+    [DisplayName("Show MSGs")]
+    [Category("Developer: Logging")]
+    [DefaultValue(false)]
+    public bool ShowMsgs { get; set; } = false;
 
     [DisplayName("Dump Data")]
     [Description("Whether to dump useful game data to file.\nIncludes things such as functions, sprite info, etc.")]
