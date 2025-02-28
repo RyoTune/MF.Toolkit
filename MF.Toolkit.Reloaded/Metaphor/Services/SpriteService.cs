@@ -33,7 +33,7 @@ internal unsafe class SpriteService : IUseConfig
         _modDir = modDir;
         ScanHooks.Add(
             nameof(SetSpriteSeq),
-            "48 89 30 48 89 78 ?? 81 FB CB 12 00 00",
+            "48 89 30 48 89 78 ?? 81 FB D0 12 00 00",
             (hooks, result) =>
             {
                 var patch = new string[]
